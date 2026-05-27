@@ -1,13 +1,6 @@
 package dkg
 
 import (
-	"crypto/sha256"
-	"encoding/binary"
-	"errors"
-	"fmt"
-	"sort"
-	"strings"
-
 	"go.dedis.ch/kyber/v4"
 	"go.dedis.ch/kyber/v4/share"
 )
@@ -28,9 +21,7 @@ type Node struct {
 	Public kyber.Point
 }
 
-func (n *Node) Equal(n2 *Node) bool {
-	return n.Index == n2.Index && n.Public.Equal(n2.Public)
-}
+func (n *Node) Equal(n2 *Node) bool { _ = "STUB: not implemented"; return false }
 
 // Result is the struct that is outputted by the DKG protocol after it finishes.
 // It contains both the list of nodes that successfully ran the protocol and the
@@ -40,26 +31,7 @@ type Result struct {
 	Key  *DistKeyShare
 }
 
-func (r *Result) PublicEqual(r2 *Result) bool {
-	if len(r.Key.Commits) != len(r2.Key.Commits) {
-		return false
-	}
-	if len(r.QUAL) != len(r2.QUAL) {
-		return false
-	}
-	lenC := len(r.Key.Commits)
-	for i := range lenC {
-		if !r.Key.Commits[i].Equal(r2.Key.Commits[i]) {
-			return false
-		}
-	}
-	for i := range r.QUAL {
-		if !r.QUAL[i].Equal(&r2.QUAL[i]) {
-			return false
-		}
-	}
-	return true
-}
+func (r *Result) PublicEqual(r2 *Result) bool { _ = "STUB: not implemented"; return false }
 
 // DistKeyShare holds the share of a distributed key for a participant.
 type DistKeyShare struct {
@@ -71,23 +43,30 @@ type DistKeyShare struct {
 
 // Public returns the public key associated with the distributed private key.
 func (d *DistKeyShare) Public() kyber.Point {
-	return d.Commits[0]
+	_ = "STUB: not implemented"
+	return *
+
+	// PriShare implements the dss.DistKeyShare interface so either pedersen or
+	// rabin dkg can be used with dss.
+	new(kyber.Point)
 }
 
-// PriShare implements the dss.DistKeyShare interface so either pedersen or
-// rabin dkg can be used with dss.
 func (d *DistKeyShare) PriShare() *share.PriShare {
-	return d.Share
+	_ = "STUB: not implemented"
+
+	// Commitments implements the dss.DistKeyShare interface so either pedersen or
+	// rabin dkg can be used with dss.
+	return nil
 }
 
-// Commitments implements the dss.DistKeyShare interface so either pedersen or
-// rabin dkg can be used with dss.
 func (d *DistKeyShare) Commitments() []kyber.Point {
-	return d.Commits
+	_ = "STUB: not implemented"
+
+	// Deal holds the Deal for one participant as well as the index of the issuing
+	// Dealer.
+	return nil
 }
 
-// Deal holds the Deal for one participant as well as the index of the issuing
-// Dealer.
 type Deal struct {
 	// Index of the share holder
 	ShareIndex uint32
@@ -112,50 +91,21 @@ type DealBundle struct {
 
 // Hash hashes the index, public coefficients and deals
 func (d *DealBundle) Hash() ([]byte, error) {
+	_ = "STUB: not implemented"
 	// first order the deals in a  stable order
-	sort.SliceStable(d.Deals, func(i, j int) bool {
-		return d.Deals[i].ShareIndex < d.Deals[j].ShareIndex
-	})
-	h := sha256.New()
-	err := binary.Write(h, binary.BigEndian, d.DealerIndex)
-	if err != nil {
-		return nil, err
-	}
-
-	for _, c := range d.Public {
-		cbuff, err := c.MarshalBinary()
-		if err != nil {
-			return nil, err
-		}
-		_, err = h.Write(cbuff)
-		if err != nil {
-			return nil, err
-		}
-	}
-	for _, deal := range d.Deals {
-		err = binary.Write(h, binary.BigEndian, deal.ShareIndex)
-		if err != nil {
-			return nil, err
-		}
-		_, err = h.Write(deal.EncryptedShare)
-		if err != nil {
-			return nil, err
-		}
-	}
-	_, err = h.Write(d.SessionID)
-	return h.Sum(nil), err
+	return nil, nil
 }
 
-func (d *DealBundle) Index() Index {
-	return d.DealerIndex
-}
+func (d *DealBundle) Index() Index { _ = "STUB: not implemented"; return *new(Index) }
 
 func (d *DealBundle) Sig() []byte {
-	return d.Signature
+	_ = "STUB: not implemented"
+
+	// Response holds the Response from another participant as well as the index of
+	// the target Dealer.
+	return nil
 }
 
-// Response holds the Response from another participant as well as the index of
-// the target Dealer.
 type Response struct {
 	// Index of the Dealer for which this response is for
 	DealerIndex uint32
@@ -178,51 +128,16 @@ type ResponseBundle struct {
 
 // Hash hashes the share index and responses
 func (b *ResponseBundle) Hash() ([]byte, error) {
+	_ = "STUB: not implemented"
 	// first order the response slice in a canonical order
-	sort.SliceStable(b.Responses, func(i, j int) bool {
-		return b.Responses[i].DealerIndex < b.Responses[j].DealerIndex
-	})
-	h := sha256.New()
-	var err error
-	if err = binary.Write(h, binary.BigEndian, b.ShareIndex); err != nil {
-		return nil, err
-	}
-
-	for _, resp := range b.Responses {
-		if err = binary.Write(h, binary.BigEndian, resp.DealerIndex); err != nil {
-			return nil, err
-		}
-		if resp.Status == Success {
-			if err = binary.Write(h, binary.BigEndian, byte(1)); err != nil {
-				return nil, err
-			}
-		} else {
-			if err = binary.Write(h, binary.BigEndian, byte(0)); err != nil {
-				return nil, err
-			}
-		}
-	}
-	_, err = h.Write(b.SessionID)
-	return h.Sum(nil), err
+	return nil, nil
 }
 
-func (b *ResponseBundle) Index() Index {
-	return b.ShareIndex
-}
+func (b *ResponseBundle) Index() Index { _ = "STUB: not implemented"; return *new(Index) }
 
-func (b *ResponseBundle) Sig() []byte {
-	return b.Signature
-}
+func (b *ResponseBundle) Sig() []byte { _ = "STUB: not implemented"; return nil }
 
-func (b *ResponseBundle) String() string {
-	var s = fmt.Sprintf("ShareHolder %d: ", b.ShareIndex)
-	var arr []string
-	for _, resp := range b.Responses {
-		arr = append(arr, fmt.Sprintf("{dealer %d, status %v}", resp.DealerIndex, resp.Status))
-	}
-	s += "[" + strings.Join(arr, ",") + "]"
-	return s
-}
+func (b *ResponseBundle) String() string { _ = "STUB: not implemented"; return "" }
 
 var _ Packet = (*JustificationBundle)(nil)
 
@@ -243,44 +158,22 @@ type Justification struct {
 }
 
 func (j *JustificationBundle) Hash() ([]byte, error) {
+	_ = "STUB: not implemented"
 	// sort them in a canonical order
-	sort.SliceStable(j.Justifications, func(a, b int) bool {
-		return j.Justifications[a].ShareIndex < j.Justifications[b].ShareIndex
-	})
-	h := sha256.New()
-	err := binary.Write(h, binary.BigEndian, j.DealerIndex)
-	if err != nil {
-		return nil, err
-	}
-	for _, just := range j.Justifications {
-		err := binary.Write(h, binary.BigEndian, just.ShareIndex)
-		if err != nil {
-			return nil, err
-		}
-		sbuff, err := just.Share.MarshalBinary()
-		if err != nil {
-			return nil, err
-		}
-		_, err = h.Write(sbuff)
-		if err != nil {
-			return nil, err
-		}
-	}
-	_, err = h.Write(j.SessionID)
-	return h.Sum(nil), err
+	return nil, nil
 }
 
-func (j *JustificationBundle) Index() Index {
-	return j.DealerIndex
-}
+func (j *JustificationBundle) Index() Index { _ = "STUB: not implemented"; return *new(Index) }
 
 func (j *JustificationBundle) Sig() []byte {
-	return j.Signature
+	_ = "STUB: not implemented"
+
+	// Packet is the interface that implements the three messages that this
+	// implementation uses during the different phases. This interface allows to
+	// verify a DKG packet without knowing its specific type.
+	return nil
 }
 
-// Packet is the interface that implements the three messages that this
-// implementation uses during the different phases. This interface allows to
-// verify a DKG packet without knowing its specific type.
 type Packet interface {
 	Hash() ([]byte, error)
 	Index() Index
@@ -291,58 +184,9 @@ type Packet interface {
 // signature. The signature is verified via the information contained in the
 // config, namely the old and new nodes public keys.
 func VerifyPacketSignature(c *Config, p Packet) error {
+	_ = "STUB: not implemented"
 	// this method returns the correct dealers wether this config is for a DKG
 	// or a resharing. For a DKG, OldNodes is set to nil, so the new nodes are
 	// the ones that are going to be dealers as well.
-	getDealers := func() []Node {
-		if c.OldNodes == nil {
-			return c.NewNodes
-		}
-		return c.OldNodes
-	}
-	var ok bool
-	var err error
-
-	var hash []byte
-	var pub kyber.Point
-	var sig []byte
-	switch auth := p.(type) {
-	case *DealBundle:
-		hash, err = auth.Hash()
-		if err != nil {
-			return err
-		}
-		pub, ok = findIndex(getDealers(), auth.DealerIndex)
-		if !ok {
-			return errors.New("no nodes with this public key")
-		}
-		sig = auth.Signature
-	case *ResponseBundle:
-		hash, err = auth.Hash()
-		if err != nil {
-			return err
-		}
-		pub, ok = findIndex(c.NewNodes, auth.ShareIndex)
-		if !ok {
-			return errors.New("no nodes with this public key")
-		}
-		sig = auth.Signature
-	case *JustificationBundle:
-		hash, err = auth.Hash()
-		if err != nil {
-			return err
-		}
-		pub, ok = findIndex(getDealers(), auth.DealerIndex)
-		if !ok {
-			return errors.New("no nodes with this public key")
-		}
-		sig = auth.Signature
-	default:
-		return errors.New("unknown packet type")
-	}
-
-	if err := c.Auth.Verify(pub, hash, sig); err != nil {
-		return fmt.Errorf("invalid signature: %w", err)
-	}
 	return nil
 }

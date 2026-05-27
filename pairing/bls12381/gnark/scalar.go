@@ -10,104 +10,88 @@ import (
 
 	fr "github.com/consensys/gnark-crypto/ecc/bls12-381/fr"
 	"go.dedis.ch/kyber/v4"
-	"go.dedis.ch/kyber/v4/util/random"
 )
 
 var _ kyber.Scalar = &Scalar{}
 
 type Scalar struct{ inner fr.Element }
 
-func (s *Scalar) MarshalBinary() (data []byte, err error) { res := s.inner.Bytes(); return res[:], nil }
-
-func (s *Scalar) UnmarshalBinary(data []byte) error { s.inner.SetBytes(data); return nil }
-
-func (s *Scalar) String() string { return s.inner.String() }
-
-func (s *Scalar) MarshalSize() int { return fr.Bytes }
-
-func (s *Scalar) MarshalTo(w io.Writer) (int, error) {
-	buf := s.inner.Bytes()
-	return w.Write(buf[:])
+func (s *Scalar) MarshalBinary() (data []byte, err error) {
+	_ = "STUB: not implemented"
+	return nil, nil
 }
 
-func (s *Scalar) UnmarshalFrom(r io.Reader) (int, error) {
-	buf := make([]byte, s.MarshalSize())
-	n, err := io.ReadFull(r, buf)
-	if err != nil {
-		return n, err
-	}
-	s.inner.SetBytes(buf)
-	return n, nil
-}
+func (s *Scalar) UnmarshalBinary(data []byte) error { _ = "STUB: not implemented"; return nil }
 
-func (s *Scalar) Equal(s2 kyber.Scalar) bool {
-	x := s2.(*Scalar)
-	return s.inner.Cmp(&x.inner) == 0
-}
+func (s *Scalar) String() string { _ = "STUB: not implemented"; return "" }
+
+func (s *Scalar) MarshalSize() int { _ = "STUB: not implemented"; return 0 }
+
+func (s *Scalar) MarshalTo(w io.Writer) (int, error) { _ = "STUB: not implemented"; return 0, nil }
+
+func (s *Scalar) UnmarshalFrom(r io.Reader) (int, error) { _ = "STUB: not implemented"; return 0, nil }
+
+func (s *Scalar) Equal(s2 kyber.Scalar) bool { _ = "STUB: not implemented"; return false }
 
 func (s *Scalar) Set(a kyber.Scalar) kyber.Scalar {
-	aa := a.(*Scalar)
-	s.inner.Set(&aa.inner)
-	return s
+	_ = "STUB: not implemented"
+	return *new(kyber.Scalar)
 }
 
-func (s *Scalar) Clone() kyber.Scalar { return new(Scalar).Set(s) }
+func (s *Scalar) Clone() kyber.Scalar { _ = "STUB: not implemented"; return *new(kyber.Scalar) }
 
 func (s *Scalar) SetInt64(v int64) kyber.Scalar {
-	s.inner.SetInt64(v)
-
-	return s
+	_ = "STUB: not implemented"
+	return *new(kyber.Scalar)
 }
 
-func (s *Scalar) Zero() kyber.Scalar { s.inner.SetUint64(0); return s }
+func (s *Scalar) Zero() kyber.Scalar { _ = "STUB: not implemented"; return *new(kyber.Scalar) }
 
 func (s *Scalar) Add(a, b kyber.Scalar) kyber.Scalar {
-	aa, bb := a.(*Scalar), b.(*Scalar)
-	s.inner.Add(&aa.inner, &bb.inner)
-	return s
+	_ = "STUB: not implemented"
+	return *new(kyber.Scalar)
 }
 
 func (s *Scalar) Sub(a, b kyber.Scalar) kyber.Scalar {
-	aa, bb := a.(*Scalar), b.(*Scalar)
-	s.inner.Sub(&aa.inner, &bb.inner)
-	return s
+	_ = "STUB: not implemented"
+	return *new(kyber.Scalar)
 }
 
 func (s *Scalar) Neg(a kyber.Scalar) kyber.Scalar {
-	s.Set(a)
-	s.inner.Neg(&s.inner)
-	return s
+	_ = "STUB: not implemented"
+	return *new(kyber.Scalar)
 }
 
-func (s *Scalar) One() kyber.Scalar { s.inner.SetUint64(1); return s }
+func (s *Scalar) One() kyber.Scalar { _ = "STUB: not implemented"; return *new(kyber.Scalar) }
 
 func (s *Scalar) Mul(a, b kyber.Scalar) kyber.Scalar {
-	aa, bb := a.(*Scalar), b.(*Scalar)
-	s.inner.Mul(&aa.inner, &bb.inner)
-	return s
+	_ = "STUB: not implemented"
+	return *new(kyber.Scalar)
 }
 
-func (s *Scalar) Div(a, b kyber.Scalar) kyber.Scalar { return s.Mul(new(Scalar).Inv(b), a) }
+func (s *Scalar) Div(a, b kyber.Scalar) kyber.Scalar {
+	_ = "STUB: not implemented"
+	return *new(kyber.Scalar)
+}
 
 func (s *Scalar) Inv(a kyber.Scalar) kyber.Scalar {
-	aa := a.(*Scalar)
-	s.inner.Inverse(&aa.inner)
-	return s
+	_ = "STUB: not implemented"
+	return *new(kyber.Scalar)
 }
 
 func (s *Scalar) Pick(stream cipher.Stream) kyber.Scalar {
-	mod := compatiblemod.FromBigInt(fr.Modulus())
-	randomInt := random.Int(mod, stream).ToBigInt()
-	s.inner.SetBigInt(randomInt)
-	return s
+	_ = "STUB: not implemented"
+	return *new(kyber.Scalar)
 }
 
-func (s *Scalar) SetBytes(data []byte) kyber.Scalar { s.inner.SetBytes(data); return s }
+func (s *Scalar) SetBytes(data []byte) kyber.Scalar {
+	_ = "STUB: not implemented"
+	return *new(kyber.Scalar)
+}
 
 func (s *Scalar) ByteOrder() kyber.ByteOrder {
-	return kyber.BigEndian
+	_ = "STUB: not implemented"
+	return *new(kyber.ByteOrder)
 }
 
-func (s *Scalar) GroupOrder() *compatiblemod.Mod {
-	return compatiblemod.FromBigInt(fr.Modulus())
-}
+func (s *Scalar) GroupOrder() *compatiblemod.Mod { _ = "STUB: not implemented"; return nil }

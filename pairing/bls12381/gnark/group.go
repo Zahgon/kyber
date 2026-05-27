@@ -3,7 +3,6 @@
 package gnark
 
 import (
-	fr "github.com/consensys/gnark-crypto/ecc/bls12-381/fr"
 	"go.dedis.ch/kyber/v4"
 )
 
@@ -18,8 +17,8 @@ type groupBls struct {
 	newPoint func() kyber.Point
 }
 
-func (g groupBls) String() string       { return g.name }
-func (g groupBls) ScalarLen() int       { return fr.Bytes }
-func (g groupBls) Scalar() kyber.Scalar { return new(Scalar).SetInt64(0) }
-func (g groupBls) PointLen() int        { return g.newPoint().MarshalSize() }
-func (g groupBls) Point() kyber.Point   { return g.newPoint() }
+func (g groupBls) String() string       { _ = "STUB: not implemented"; return "" }
+func (g groupBls) ScalarLen() int       { _ = "STUB: not implemented"; return 0 }
+func (g groupBls) Scalar() kyber.Scalar { _ = "STUB: not implemented"; return *new(kyber.Scalar) }
+func (g groupBls) PointLen() int        { _ = "STUB: not implemented"; return 0 }
+func (g groupBls) Point() kyber.Point   { _ = "STUB: not implemented"; return *new(kyber.Point) }

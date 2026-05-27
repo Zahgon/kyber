@@ -31,17 +31,10 @@
 package vss
 
 import (
-	"bytes"
-	"encoding/binary"
 	"errors"
-	"fmt"
-	"reflect"
 
 	"go.dedis.ch/kyber/v4"
-	"go.dedis.ch/kyber/v4/internal"
-	"go.dedis.ch/kyber/v4/internal/protobuf"
 	"go.dedis.ch/kyber/v4/share"
-	"go.dedis.ch/kyber/v4/sign/schnorr"
 )
 
 // Suite defines the capabilities required by the vss package.
@@ -99,52 +92,11 @@ type rabinCompatibleDeal struct {
 
 // Marshal marshals a Deal into bytes or return an error if encoding failed.
 // This encoding should always be preferred as it is compatible with Kyber V3.
-func (deal *Deal) Marshal() ([]byte, error) {
-	secShareBytes, err := internal.MarshalPriShare(deal.SecShare)
-	if err != nil {
-		return nil, err
-	}
-	rndShareBytes, err := internal.MarshalPriShare(deal.RndShare)
-	if err != nil {
-		return nil, err
-	}
-	compatibleDeal := &rabinCompatibleDeal{
-		SessionID:   deal.SessionID,
-		SecShare:    secShareBytes,
-		RndShare:    rndShareBytes,
-		T:           deal.T,
-		Commitments: deal.Commitments,
-	}
-	return protobuf.Encode(compatibleDeal)
-}
+func (deal *Deal) Marshal() ([]byte, error) { _ = "STUB: not implemented"; return nil, nil }
 
 // Unmarshal unmarshals a Deal from bytes or return an error if decoding failed.
 // This decoding should always be preferred as it is compatible with Kyber V3.
-func (deal *Deal) Unmarshal(data []byte, suite Suite) error {
-	compatibleDeal := &rabinCompatibleDeal{}
-	constructors := make(protobuf.Constructors)
-	constructors[reflect.TypeFor[kyber.Point]()] = func() any { return suite.Point() }
-	err := protobuf.DecodeWithConstructors(data, compatibleDeal, constructors)
-	if err != nil {
-		return err
-	}
-
-	secShare, err := internal.UnmarshalPriShare(compatibleDeal.SecShare, suite)
-	if err != nil {
-		return err
-	}
-
-	rndShare, err := internal.UnmarshalPriShare(compatibleDeal.RndShare, suite)
-	if err != nil {
-		return err
-	}
-	deal.SessionID = compatibleDeal.SessionID
-	deal.SecShare = secShare
-	deal.RndShare = rndShare
-	deal.T = compatibleDeal.T
-	deal.Commitments = compatibleDeal.Commitments
-	return nil
-}
+func (deal *Deal) Unmarshal(data []byte, suite Suite) error { _ = "STUB: not implemented"; return nil }
 
 // EncryptedDeal contains the deal in a encrypted form only decipherable by the
 // correct recipient. The encryption is performed in a similar manner as what is
@@ -193,65 +145,17 @@ type Justification struct {
 // the secrecy at the cost of the decreased robustness and vice versa. It
 // returns an error if the t is inferior or equal to 2.
 func NewDealer(suite Suite, longterm, secret kyber.Scalar, verifiers []kyber.Point, t uint32) (*Dealer, error) {
-	d := &Dealer{
-		suite:     suite,
-		long:      longterm,
-		secret:    secret,
-		verifiers: verifiers,
-	}
-	if !validT(t, verifiers) {
-		return nil, fmt.Errorf("dealer: t %d invalid", t)
-	}
-	d.t = t
-
-	H := deriveH(d.suite, d.verifiers)
-	f := share.NewPriPoly(d.suite, d.t, d.secret, suite.RandomStream())
-	g := share.NewPriPoly(d.suite, d.t, nil, suite.RandomStream())
-	d.pub = d.suite.Point().Mul(d.long, nil)
-
-	// Compute public polynomial coefficients
-	F := f.Commit(d.suite.Point().Base())
-	_, d.secretCommits = F.Info()
-	G := g.Commit(H)
-
-	C, err := F.Add(G)
-	if err != nil {
-		return nil, err
-	}
-	_, commitments := C.Info()
-
-	d.sessionID, err = sessionID(d.suite, d.pub, d.verifiers, commitments, d.t)
-	if err != nil {
-		return nil, err
-	}
-
-	d.aggregator = newAggregator(d.suite, d.pub, d.verifiers, commitments, d.t, d.sessionID)
-	// C = F + G
-	d.deals = make([]*Deal, len(d.verifiers))
-	for i := range d.verifiers {
-		idx := uint32(i)
-		fi := f.Eval(idx)
-		gi := g.Eval(idx)
-		d.deals[i] = &Deal{
-			SessionID:   d.sessionID,
-			SecShare:    fi,
-			RndShare:    gi,
-			Commitments: commitments,
-			T:           d.t,
-		}
-	}
-	d.hkdfContext, err = context(suite, d.pub, verifiers)
-	return d, err
+	_ = "STUB: not implemented"
+	return nil, nil
 }
+
+// Compute public polynomial coefficients
+
+// C = F + G
 
 // PlaintextDeal returns the plaintext version of the deal destined for peer i.
 // Use this only for testing.
-func (d *Dealer) PlaintextDeal(i int) (*Deal, error) {
-	if i >= len(d.deals) {
-		return nil, errors.New("dealer: PlaintextDeal given wrong index")
-	}
-	return d.deals[i], nil
-}
+func (d *Dealer) PlaintextDeal(i int) (*Deal, error) { _ = "STUB: not implemented"; return nil, nil }
 
 // EncryptedDeal returns the encryption of the deal that must be given to the
 // verifier at index i.
@@ -261,52 +165,22 @@ func (d *Dealer) PlaintextDeal(i int) (*Deal, error) {
 // This shared key is then fed into a HKDF whose output is the key to a AEAD
 // (AES256-GCM) scheme to encrypt the deal.
 func (d *Dealer) EncryptedDeal(i int) (*EncryptedDeal, error) {
-	vPub, ok := findPub(d.verifiers, uint32(i))
-	if !ok {
-		return nil, errors.New("dealer: wrong index to generate encrypted deal")
-	}
-	// generate an ephemeral key
-	dhSecret := d.suite.Scalar().Pick(d.suite.RandomStream())
-	dhPublic := d.suite.Point().Mul(dhSecret, nil)
-	// signs the public key
-	dhPublicBuff, _ := dhPublic.MarshalBinary()
-	signature, err := schnorr.Sign(d.suite, d.long, dhPublicBuff)
-	if err != nil {
-		return nil, err
-	}
-	// AES128-GCM
-	pre := dhExchange(d.suite, dhSecret, vPub)
-	gcm, err := newAEAD(d.suite.Hash, pre, d.hkdfContext)
-	if err != nil {
-		return nil, err
-	}
-
-	nonce := make([]byte, gcm.NonceSize())
-	dealBuff, err := d.deals[i].Marshal()
-	if err != nil {
-		return nil, err
-	}
-	encrypted := gcm.Seal(nil, nonce, dealBuff, d.hkdfContext)
-	return &EncryptedDeal{
-		DHKey:     dhPublic,
-		Signature: signature,
-		Cipher:    encrypted,
-	}, nil
+	_ = "STUB: not implemented"
+	return nil, nil
 }
+
+// generate an ephemeral key
+
+// signs the public key
+
+// AES128-GCM
 
 // EncryptedDeals calls `EncryptedDeal` for each index of the verifier and
 // returns the list of encrypted deals. Each index in the returned slice
 // corresponds to the index in the list of verifiers.
 func (d *Dealer) EncryptedDeals() ([]*EncryptedDeal, error) {
-	deals := make([]*EncryptedDeal, len(d.verifiers))
-	var err error
-	for i := range d.verifiers {
-		deals[i], err = d.EncryptedDeal(i)
-		if err != nil {
-			return nil, err
-		}
-	}
-	return deals, nil
+	_ = "STUB: not implemented"
+	return nil, nil
 }
 
 // ProcessResponse analyzes the given Response. If it's a valid complaint, then
@@ -314,66 +188,50 @@ func (d *Dealer) EncryptedDeals() ([]*EncryptedDeal, error) {
 // participants. If it's an invalid complaint, it returns an error about the
 // complaint. The verifiers will also ignore an invalid Complaint.
 func (d *Dealer) ProcessResponse(r *Response) (*Justification, error) {
-	if err := d.verifyResponse(r); err != nil {
-		return nil, err
-	}
-	if r.Approved {
-		return nil, nil //nolint:nilnil // Expected behavior
-	}
-
-	j := &Justification{
-		SessionID: d.sessionID,
-		// index is guaranteed to be good because of d.verifyResponse before
-		Index: r.Index,
-		Deal:  d.deals[r.Index],
-	}
-	sig, err := schnorr.Sign(d.suite, d.long, j.Hash(d.suite))
-	if err != nil {
-		return nil, err
-	}
-	j.Signature = sig
-	return j, nil
+	_ = "STUB: not implemented"
+	return nil, nil
 }
+
+//nolint:nilnil // Expected behavior
+
+// index is guaranteed to be good because of d.verifyResponse before
 
 // SecretCommit returns the commitment of the secret being shared by this
 // dealer. This function is only to be called once the deal has enough approvals
 // and is verified otherwise it returns nil.
-func (d *Dealer) SecretCommit() kyber.Point {
-	if !d.EnoughApprovals() || !d.DealCertified() {
-		return nil
-	}
-	return d.suite.Point().Mul(d.secret, nil)
-}
+func (d *Dealer) SecretCommit() kyber.Point { _ = "STUB: not implemented"; return *new(kyber.Point) }
 
 // Commits returns the commitments of the coefficient of the secret polynomial
 // the Dealer is sharing.
-func (d *Dealer) Commits() []kyber.Point {
-	if !d.EnoughApprovals() || !d.DealCertified() {
-		return nil
-	}
-	return d.secretCommits
-}
+func (d *Dealer) Commits() []kyber.Point { _ = "STUB: not implemented"; return nil }
 
 // Key returns the longterm key pair used by this Dealer.
 func (d *Dealer) Key() (secret kyber.Scalar, public kyber.Point) {
-	return d.long, d.pub
+	_ = "STUB: not implemented"
+	return *
+
+	// SessionID returns the current sessionID generated by this dealer for this
+	// protocol run.
+	new(kyber.Scalar), *new(kyber.Point)
 }
 
-// SessionID returns the current sessionID generated by this dealer for this
-// protocol run.
 func (d *Dealer) SessionID() []byte {
-	return d.sessionID
+	_ = "STUB: not implemented"
+
+	// SetTimeout tells this dealer to consider this moment the maximum time limit.
+	// it calls cleanVerifiers which will take care of all Verifiers who have not
+	// responded until now.
+	return nil
 }
 
-// SetTimeout tells this dealer to consider this moment the maximum time limit.
-// it calls cleanVerifiers which will take care of all Verifiers who have not
-// responded until now.
 func (d *Dealer) SetTimeout() {
-	d.cleanVerifiers()
+	_ = "STUB: not implemented"
+
+	// Verifier receives a Deal from a Dealer, can reply with a Complaint, and can
+	// collaborate with other Verifiers to reconstruct a secret.
+	return
 }
 
-// Verifier receives a Deal from a Dealer, can reply with a Complaint, and can
-// collaborate with other Verifiers to reconstruct a secret.
 type Verifier struct {
 	suite       Suite
 	longterm    kyber.Scalar
@@ -395,35 +253,8 @@ type Verifier struct {
 // it with `verifier.SetT()`.
 func NewVerifier(suite Suite, longterm kyber.Scalar, dealerKey kyber.Point,
 	verifiers []kyber.Point) (*Verifier, error) {
-
-	pub := suite.Point().Mul(longterm, nil)
-	var ok bool
-	var index uint32
-	for i, v := range verifiers {
-		if v.Equal(pub) {
-			ok = true
-			index = uint32(i)
-			break
-		}
-	}
-	if !ok {
-		return nil, errors.New("vss: public key not found in the list of verifiers")
-	}
-	hkdfContext, err := context(suite, dealerKey, verifiers)
-	if err != nil {
-		return nil, err
-	}
-	v := &Verifier{
-		suite:       suite,
-		longterm:    longterm,
-		dealer:      dealerKey,
-		verifiers:   verifiers,
-		pub:         pub,
-		index:       index,
-		hkdfContext: hkdfContext,
-	}
-
-	return v, nil
+	_ = "STUB: not implemented"
+	return nil, nil
 }
 
 // ProcessEncryptedDeal decrypt the deal received from the Dealer.
@@ -436,140 +267,84 @@ func NewVerifier(suite Suite, longterm kyber.Scalar, dealerKey kyber.Point,
 // If the deal has already been received, or the signature generation of the
 // response failed, it returns an error without any responses.
 func (v *Verifier) ProcessEncryptedDeal(e *EncryptedDeal) (*Response, error) {
-	d, err := v.decryptDeal(e)
-	if err != nil {
-		return nil, err
-	}
-	if d.SecShare.I != v.index {
-		return nil, errors.New("vss: verifier got wrong index from deal")
-	}
-
-	sid, err := sessionID(v.suite, v.dealer, v.verifiers, d.Commitments, d.T)
-	if err != nil {
-		return nil, err
-	}
-
-	if v.aggregator == nil {
-		v.aggregator = newAggregator(v.suite, v.dealer, v.verifiers, d.Commitments, d.T, d.SessionID)
-	}
-
-	r := &Response{
-		SessionID: sid,
-		Index:     v.index,
-		Approved:  true,
-	}
-	if err = v.VerifyDeal(d, true); err != nil {
-		r.Approved = false
-	}
-
-	if errors.Is(err, errDealAlreadyProcessed) {
-		return nil, err
-	}
-
-	if r.Signature, err = schnorr.Sign(v.suite, v.longterm, r.Hash(v.suite)); err != nil {
-		return nil, err
-	}
-
-	if err = v.addResponse(r); err != nil {
-		return nil, err
-	}
-	return r, nil
+	_ = "STUB: not implemented"
+	return nil, nil
 }
 
 func (v *Verifier) decryptDeal(e *EncryptedDeal) (*Deal, error) {
-	ephBuff, err := e.DHKey.MarshalBinary()
-	if err != nil {
-		return nil, err
-	}
-	// verify signature
-	if err := schnorr.Verify(v.suite, v.dealer, ephBuff, e.Signature); err != nil {
-		return nil, err
-	}
-
-	// compute shared key and AES526-GCM cipher
-	pre := dhExchange(v.suite, v.longterm, e.DHKey)
-	gcm, err := newAEAD(v.suite.Hash, pre, v.hkdfContext)
-	if err != nil {
-		return nil, err
-	}
-	nonce := make([]byte, gcm.NonceSize())
-	decrypted, err := gcm.Open(nil, nonce, e.Cipher, v.hkdfContext)
-	if err != nil {
-		return nil, err
-	}
-	deal := &Deal{}
-	err = deal.Unmarshal(decrypted, v.suite)
-	return deal, err
+	_ = "STUB: not implemented"
+	return nil, nil
 }
+
+// verify signature
+
+// compute shared key and AES526-GCM cipher
 
 // ProcessResponse analyzes the given response. If it's a valid complaint, the
 // verifier should expect to see a Justification from the Dealer. It returns an
 // error if it's not a valid response.
 // Call `v.DealCertified()` to check if the whole protocol is finished.
-func (v *Verifier) ProcessResponse(resp *Response) error {
-	return v.verifyResponse(resp)
-}
+func (v *Verifier) ProcessResponse(resp *Response) error { _ = "STUB: not implemented"; return nil }
 
 // Deal returns the Deal that this verifier has received. It returns
 // nil if the deal is not certified or there is not enough approvals.
-func (v *Verifier) Deal() *Deal {
-	if !v.EnoughApprovals() || !v.DealCertified() {
-		return nil
-	}
-	return v.deal
-}
+func (v *Verifier) Deal() *Deal { _ = "STUB: not implemented"; return nil }
 
 // ProcessJustification takes a DealerResponse and returns an error if
 // something went wrong during the verification. If it is the case, that
 // probably means the Dealer is acting maliciously. In order to be sure, call
 // `v.EnoughApprovals()` and if true, `v.DealCertified()`.
 func (v *Verifier) ProcessJustification(dr *Justification) error {
-	return v.verifyJustification(dr)
+	_ = "STUB: not implemented"
+	return nil
 }
 
 // Key returns the longterm key pair this verifier is using during this protocol
 // run.
 func (v *Verifier) Key() (kyber.Scalar, kyber.Point) {
-	return v.longterm, v.pub
+	_ = "STUB: not implemented"
+	return *
+
+	// Index returns the index of the verifier in the list of participants used
+	// during this run of the protocol.
+	new(kyber.Scalar), *new(kyber.Point)
 }
 
-// Index returns the index of the verifier in the list of participants used
-// during this run of the protocol.
 func (v *Verifier) Index() uint32 {
-	return v.index
+	_ = "STUB: not implemented"
+
+	// SessionID returns the session id generated by the Dealer. WARNING: it returns
+	// an nil slice if the verifier has not received the Deal yet !
+	return 0
 }
 
-// SessionID returns the session id generated by the Dealer. WARNING: it returns
-// an nil slice if the verifier has not received the Deal yet !
 func (v *Verifier) SessionID() []byte {
-	return v.sid
+	_ = "STUB: not implemented"
+
+	// RecoverSecret recovers the secret shared by a Dealer by gathering at least t
+	// Deals from the verifiers. It returns an error if there is not enough Deals or
+	// if all Deals don't have the same SessionID.
+	return nil
 }
 
-// RecoverSecret recovers the secret shared by a Dealer by gathering at least t
-// Deals from the verifiers. It returns an error if there is not enough Deals or
-// if all Deals don't have the same SessionID.
 func RecoverSecret(suite Suite, deals []*Deal, n, t uint32) (kyber.Scalar, error) {
-	shares := make([]*share.PriShare, len(deals))
-	for i, deal := range deals {
-		// all sids the same
-		if bytes.Equal(deal.SessionID, deals[0].SessionID) {
-			shares[i] = deal.SecShare
-		} else {
-			return nil, errors.New("vss: all deals need to have same session id")
-		}
-	}
-	return share.RecoverSecret(suite, shares, t, n)
+	_ = "STUB: not implemented"
+	return *new(kyber.Scalar), nil
 }
+
+// all sids the same
 
 // SetTimeout tells this verifier to consider this moment the maximum time limit.
 // it calls cleanVerifiers which will take care of all Verifiers who have not
 // responded until now.
 func (v *Verifier) SetTimeout() {
-	v.cleanVerifiers()
+	_ = "STUB: not implemented"
+
+	// aggregator is used to collect all deals, and responses for one protocol run.
+	// It brings common functionalities for both Dealer and Verifier structs.
+	return
 }
 
-// aggregator is used to collect all deals, and responses for one protocol run.
-// It brings common functionalities for both Dealer and Verifier structs.
 type aggregator struct {
 	suite     Suite
 	dealer    kyber.Point
@@ -591,16 +366,8 @@ func newAggregator(
 	t uint32,
 	sid []byte,
 ) *aggregator {
-	agg := &aggregator{
-		suite:     suite,
-		dealer:    dealer,
-		verifiers: verifiers,
-		commits:   commitments,
-		t:         t,
-		sid:       sid,
-		responses: make(map[uint32]*Response),
-	}
-	return agg
+	_ = "STUB: not implemented"
+	return nil
 }
 
 var errDealAlreadyProcessed = errors.New("vss: verifier already received a deal")
@@ -609,227 +376,77 @@ var errDealAlreadyProcessed = errors.New("vss: verifier already received a deal"
 // inclusion is true, it also returns an error if it the second time this struct
 // analyzes a Deal.
 func (a *aggregator) VerifyDeal(d *Deal, inclusion bool) error {
-	if a.deal != nil && inclusion {
-		return errDealAlreadyProcessed
-
-	}
-	if a.deal == nil {
-		a.commits = d.Commitments
-		a.sid = d.SessionID
-		a.deal = d
-	}
-
-	if !validT(d.T, a.verifiers) {
-		return errors.New("vss: invalid t received in Deal")
-	}
-
-	if !bytes.Equal(a.sid, d.SessionID) {
-		return errors.New("vss: find different sessionIDs from Deal")
-	}
-
-	fi := d.SecShare
-	gi := d.RndShare
-	if fi.I != gi.I {
-		return errors.New("vss: not the same index for f and g share in Deal")
-	}
-	if fi.I >= uint32(len(a.verifiers)) {
-		return errors.New("vss: index out of bounds in Deal")
-	}
-	// compute fi * G + gi * H
-	fig := a.suite.Point().Base().Mul(fi.V, nil)
-	H := deriveH(a.suite, a.verifiers)
-	gih := a.suite.Point().Mul(gi.V, H)
-	ci := a.suite.Point().Add(fig, gih)
-
-	commitPoly := share.NewPubPoly(a.suite, nil, d.Commitments)
-
-	pubShare := commitPoly.Eval(fi.I)
-	if !ci.Equal(pubShare.V) {
-		return errors.New("vss: share does not verify against commitments in Deal")
-	}
+	_ = "STUB: not implemented"
 	return nil
 }
+
+// compute fi * G + gi * H
 
 // cleanVerifiers checks the aggregator's response array and creates a StatusComplaint
 // response for all verifiers who have no response in the array.
-func (a *aggregator) cleanVerifiers() {
-	for i := range a.verifiers {
-		if _, ok := a.responses[uint32(i)]; !ok {
-			a.responses[uint32(i)] = &Response{
-				SessionID: a.sid,
-				Index:     uint32(i),
-				Approved:  false,
-			}
-		}
-	}
-}
+func (a *aggregator) cleanVerifiers() { _ = "STUB: not implemented"; return }
 
-func (a *aggregator) verifyResponse(r *Response) error {
-	if !bytes.Equal(r.SessionID, a.sid) {
-		return errors.New("vss: receiving inconsistent sessionID in response")
-	}
-
-	pub, ok := findPub(a.verifiers, r.Index)
-	if !ok {
-		return errors.New("vss: index out of bounds in response")
-	}
-
-	if err := schnorr.Verify(a.suite, pub, r.Hash(a.suite), r.Signature); err != nil {
-		return err
-	}
-
-	return a.addResponse(r)
-}
+func (a *aggregator) verifyResponse(r *Response) error { _ = "STUB: not implemented"; return nil }
 
 func (a *aggregator) verifyJustification(j *Justification) error {
-	if _, ok := findPub(a.verifiers, j.Index); !ok {
-		return errors.New("vss: index out of bounds in justification")
-	}
-	r, ok := a.responses[j.Index]
-	if !ok {
-		return errors.New("vss: no complaints received for this justification")
-	}
-	if r.Approved {
-		return errors.New("vss: justification received for an approval")
-	}
-
-	if err := a.VerifyDeal(j.Deal, false); err != nil {
-		// if one response is bad, flag the dealer as malicious
-		a.badDealer = true
-		return err
-	}
-	r.Approved = true
+	_ = "STUB: not implemented"
 	return nil
 }
 
-func (a *aggregator) addResponse(r *Response) error {
-	if _, ok := findPub(a.verifiers, r.Index); !ok {
-		return errors.New("vss: index out of bounds in Complaint")
-	}
-	if _, ok := a.responses[r.Index]; ok {
-		return errors.New("vss: already existing response from same origin")
-	}
-	a.responses[r.Index] = r
-	return nil
-}
+// if one response is bad, flag the dealer as malicious
+
+func (a *aggregator) addResponse(r *Response) error { _ = "STUB: not implemented"; return nil }
 
 // EnoughApprovals returns true if enough verifiers have sent their approval for
 // the deal they received.
-func (a *aggregator) EnoughApprovals() bool {
-	app := uint32(0)
-	for _, r := range a.responses {
-		if r.Approved {
-			app++
-		}
-	}
-	return app >= a.t
-}
+func (a *aggregator) EnoughApprovals() bool { _ = "STUB: not implemented"; return false }
 
 // DealCertified returns true if there has been less than t complaints, all
 // Justifications were correct and if EnoughApprovals() returns true.
 func (a *aggregator) DealCertified() bool {
+	_ = "STUB: not implemented"
 	// a can be nil if we're calling it before receiving a deal
-	if a == nil {
-		return false
-	}
-
-	var verifiersUnstable int
-	// Check either a StatusApproval or StatusComplaint for all known verifiers
-	// i.e. make sure all verifiers are either timed-out or OK.
-	for i := range a.verifiers {
-		if _, ok := a.responses[uint32(i)]; !ok {
-			verifiersUnstable++
-		}
-	}
-
-	tooMuchComplaints := verifiersUnstable > 0 || a.badDealer
-	return a.EnoughApprovals() && !tooMuchComplaints
+	return false
 }
+
+// Check either a StatusApproval or StatusComplaint for all known verifiers
+// i.e. make sure all verifiers are either timed-out or OK.
 
 // UnsafeSetResponseDKG is an UNSAFE bypass method to allow DKG to use VSS
 // that works on basis of approval only.
 func (a *aggregator) UnsafeSetResponseDKG(idx uint32, approval bool) {
-	r := &Response{
-		SessionID: a.sid,
-		Index:     idx,
-		Approved:  approval,
-	}
-
-	//nolint:errcheck // Unsafe function
-	a.addResponse(r)
+	_ = "STUB: not implemented"
+	return
 }
+
+//nolint:errcheck // Unsafe function
 
 // MinimumT returns a safe value of T that balances secrecy and robustness.
 // It expects n, the total number of participants.
 // T should be adjusted to your threat model. Setting a lower T decreases the
 // difficulty for an adversary to break secrecy. However, a too large T makes
 // it possible for an adversary to prevent recovery (robustness).
-func MinimumT(n uint32) uint32 {
-	return (n >> 1) + 1
-}
+func MinimumT(n uint32) uint32 { _ = "STUB: not implemented"; return 0 }
 
-func validT(t uint32, verifiers []kyber.Point) bool {
-	return t >= 2 && t <= uint32(len(verifiers))
-}
+func validT(t uint32, verifiers []kyber.Point) bool { _ = "STUB: not implemented"; return false }
 
 func deriveH(suite Suite, verifiers []kyber.Point) kyber.Point {
-	var b bytes.Buffer
-	for _, v := range verifiers {
-		_, _ = v.MarshalTo(&b)
-	}
-	base := suite.Point().Pick(suite.XOF(b.Bytes()))
-	return base
+	_ = "STUB: not implemented"
+	return *new(kyber.Point)
 }
 
 func findPub(verifiers []kyber.Point, idx uint32) (kyber.Point, bool) {
-	if idx >= uint32(len(verifiers)) {
-		return nil, false
-	}
-	return verifiers[idx], true
+	_ = "STUB: not implemented"
+	return *new(kyber.Point), false
 }
 
 func sessionID(suite Suite, dealer kyber.Point, verifiers, commitments []kyber.Point, t uint32) ([]byte, error) {
-	h := suite.Hash()
-	_, err := dealer.MarshalTo(h)
-	if err != nil {
-		return nil, err
-	}
-
-	for _, v := range verifiers {
-		_, err = v.MarshalTo(h)
-		if err != nil {
-			return nil, err
-		}
-	}
-
-	for _, c := range commitments {
-		_, err = c.MarshalTo(h)
-		if err != nil {
-			return nil, err
-		}
-	}
-
-	err = binary.Write(h, binary.LittleEndian, t)
-	return h.Sum(nil), err
+	_ = "STUB: not implemented"
+	return nil, nil
 }
 
 // Hash returns the Hash representation of the Response
-func (r *Response) Hash(s Suite) []byte {
-	h := s.Hash()
-	_, _ = h.Write([]byte("response"))
-	_, _ = h.Write(r.SessionID)
-	_ = binary.Write(h, binary.LittleEndian, r.Index)
-	_ = binary.Write(h, binary.LittleEndian, r.Approved)
-	return h.Sum(nil)
-}
+func (r *Response) Hash(s Suite) []byte { _ = "STUB: not implemented"; return nil }
 
 // Hash returns the hash of a Justification.
-func (j *Justification) Hash(s Suite) []byte {
-	h := s.Hash()
-	_, _ = h.Write([]byte("justification"))
-	_, _ = h.Write(j.SessionID)
-	_ = binary.Write(h, binary.LittleEndian, j.Index)
-	buff, _ := j.Deal.Marshal()
-	_, _ = h.Write(buff)
-	return h.Sum(nil)
-}
+func (j *Justification) Hash(s Suite) []byte { _ = "STUB: not implemented"; return nil }

@@ -3,7 +3,6 @@ package proof
 import (
 	"bytes"
 	"crypto/cipher"
-	"fmt"
 	"io"
 
 	"go.dedis.ch/kyber/v4"
@@ -24,69 +23,29 @@ type cipherStreamReader struct {
 	cipher.Stream
 }
 
-func (s *cipherStreamReader) Read(in []byte) (int, error) {
-	x := make([]byte, len(in))
-	s.XORKeyStream(x, x)
-	copy(in, x)
-	return len(in), nil
-}
+func (s *cipherStreamReader) Read(in []byte) (int, error) { _ = "STUB: not implemented"; return 0, nil }
 
 func newHashProver(suite Suite, protoName string) *hashProver {
-	var sc hashProver
-	sc.suite = suite
-	sc.pubrand = suite.XOF([]byte(protoName))
-	sc.prirand = &cipherStreamReader{suite.RandomStream()}
-	return &sc
-}
-
-func (c *hashProver) Put(message any) error {
-	return c.suite.Write(&c.msg, message)
-}
-
-func (c *hashProver) consumeMsg() error {
-	if c.msg.Len() > 0 {
-		// Stir the message into the public randomness pool
-		buf := c.msg.Bytes()
-		c.pubrand.Reseed()
-		_, err := c.pubrand.Write(buf)
-		if err != nil {
-			return err
-		}
-
-		// Append the current message data to the proof
-		_, err = c.proof.Write(buf)
-		if err != nil {
-			return err
-		}
-		c.msg.Reset()
-	}
-
+	_ = "STUB: not implemented"
 	return nil
 }
+
+func (c *hashProver) Put(message any) error { _ = "STUB: not implemented"; return nil }
+
+func (c *hashProver) consumeMsg() error { _ = "STUB: not implemented"; return nil }
+
+// Stir the message into the public randomness pool
+
+// Append the current message data to the proof
 
 // Get public randomness that depends on every bit in the proof so far.
-func (c *hashProver) PubRand(data ...any) error {
-	err := c.consumeMsg()
-	if err != nil {
-		return err
-	}
-
-	return c.suite.Read(c.pubrand, data...)
-}
+func (c *hashProver) PubRand(data ...any) error { _ = "STUB: not implemented"; return nil }
 
 // Get private randomness
-func (c *hashProver) PriRand(data ...any) error {
-	if err := c.suite.Read(c.prirand, data...); err != nil {
-		return fmt.Errorf("error reading random stream: %v", err.Error())
-	}
-	return nil
-}
+func (c *hashProver) PriRand(data ...any) error { _ = "STUB: not implemented"; return nil }
 
 // Obtain the encoded proof once the Sigma protocol is complete.
-func (c *hashProver) Proof() ([]byte, error) {
-	err := c.consumeMsg()
-	return c.proof.Bytes(), err
-}
+func (c *hashProver) Proof() ([]byte, error) { _ = "STUB: not implemented"; return nil, nil }
 
 // Noninteractive Sigma-protocol verifier context
 type hashVerifier struct {
@@ -98,47 +57,26 @@ type hashVerifier struct {
 
 func newHashVerifier(suite Suite, protoName string,
 	proof []byte) (*hashVerifier, error) {
-	var c hashVerifier
-	if _, err := c.proof.Write(proof); err != nil {
-		return nil, err
-	}
-	c.suite = suite
-	c.prbuf = c.proof.Bytes()
-	c.pubrand = suite.XOF([]byte(protoName))
-	return &c, nil
+	_ = "STUB: not implemented"
+	return nil, nil
 }
 
-func (c *hashVerifier) consumeMsg() error {
-	l := len(c.prbuf) - c.proof.Len() // How many bytes read?
-	if l > 0 {
-		// Stir consumed bytes into the public randomness pool
-		buf := c.prbuf[:l]
-		c.pubrand.Reseed()
-		_, err := c.pubrand.Write(buf)
-		if err != nil {
-			return err
-		}
+func (c *hashVerifier) consumeMsg() error { _ = "STUB: not implemented"; return nil }
 
-		c.prbuf = c.proof.Bytes() // Reset to remaining bytes
-	}
+// How many bytes read?
 
-	return nil
-}
+// Stir consumed bytes into the public randomness pool
+
+// Reset to remaining bytes
 
 // Read structured data from the proof
-func (c *hashVerifier) Get(message any) error {
-	return c.suite.Read(&c.proof, message)
-}
+func (c *hashVerifier) Get(message any) error { _ = "STUB: not implemented"; return nil }
 
 // Get public randomness that depends on every bit in the proof so far.
 func (c *hashVerifier) PubRand(data ...any) error {
+	_ = "STUB: not implemented"
 	// Stir in newly-read data
-	err := c.consumeMsg()
-	if err != nil {
-		return err
-	}
-
-	return c.suite.Read(c.pubrand, data...)
+	return nil
 }
 
 // HashProve runs a given Sigma-protocol prover with a ProverContext
@@ -155,11 +93,8 @@ func (c *hashVerifier) PubRand(data ...any) error {
 // pseudorandom stream based on a secret seed to create
 // deterministically reproducible proofs.
 func HashProve(suite Suite, protocolName string, prover Prover) ([]byte, error) {
-	ctx := newHashProver(suite, protocolName)
-	if e := (func(ProverContext) error)(prover)(ctx); e != nil {
-		return nil, e
-	}
-	return ctx.Proof()
+	_ = "STUB: not implemented"
+	return nil, nil
 }
 
 // HashVerify computes a hash-based noninteractive proof generated with HashProve.
@@ -167,9 +102,6 @@ func HashProve(suite Suite, protocolName string, prover Prover) ([]byte, error) 
 // Returns nil if the proof checks out, or an error on any failure.
 func HashVerify(suite Suite, protocolName string,
 	verifier Verifier, proof []byte) error {
-	ctx, err := newHashVerifier(suite, protocolName, proof)
-	if err != nil {
-		return err
-	}
-	return (func(VerifierContext) error)(verifier)(ctx)
+	_ = "STUB: not implemented"
+	return nil
 }

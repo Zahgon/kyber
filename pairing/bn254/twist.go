@@ -32,191 +32,47 @@ var twistGen = &twistPoint{
 	gfP2{*newGFp(0), *newGFp(1)},
 }
 
-func (c *twistPoint) String() string {
-	cpy := c.Clone()
-	cpy.MakeAffine()
-	x, y := gfP2Decode(&cpy.x), gfP2Decode(&cpy.y)
-	return "(" + x.String() + ", " + y.String() + ")"
-}
+func (c *twistPoint) String() string { _ = "STUB: not implemented"; return "" }
 
-func (c *twistPoint) Set(a *twistPoint) {
-	c.x.Set(&a.x)
-	c.y.Set(&a.y)
-	c.z.Set(&a.z)
-	c.t.Set(&a.t)
-}
+func (c *twistPoint) Set(a *twistPoint) { _ = "STUB: not implemented"; return }
 
 // IsOnCurve returns true iff c is on the curve.
-func (c *twistPoint) IsOnCurve() bool {
-	c.MakeAffine()
-	if c.IsInfinity() {
-		return true
-	}
+func (c *twistPoint) IsOnCurve() bool { _ = "STUB: not implemented"; return false }
 
-	y2, x3 := &gfP2{}, &gfP2{}
-	y2.Square(&c.y)
-	x3.Square(&c.x).Mul(x3, &c.x).Add(x3, twistB)
+func (c *twistPoint) SetInfinity() { _ = "STUB: not implemented"; return }
 
-	if *y2 != *x3 {
-		return false
-	}
-	cneg := &twistPoint{}
-	cneg.Mul(c, Order)
-	return cneg.z.IsZero()
-}
-
-func (c *twistPoint) SetInfinity() {
-	c.x.SetZero()
-	c.y.SetOne()
-	c.z.SetZero()
-	c.t.SetZero()
-}
-
-func (c *twistPoint) IsInfinity() bool {
-	return c.z.IsZero()
-}
+func (c *twistPoint) IsInfinity() bool { _ = "STUB: not implemented"; return false }
 
 func (c *twistPoint) Add(a, b *twistPoint) {
+	_ = "STUB: not implemented"
 	// For additional comments, see the same function in curve.go.
-
-	if a.IsInfinity() {
-		c.Set(b)
-		return
-	}
-	if b.IsInfinity() {
-		c.Set(a)
-		return
-	}
-
-	// See http://hyperelliptic.org/EFD/g1p/auto-code/shortw/jacobian-0/addition/add-2007-bl.op3
-	z12 := (&gfP2{}).Square(&a.z)
-	z22 := (&gfP2{}).Square(&b.z)
-	u1 := (&gfP2{}).Mul(&a.x, z22)
-	u2 := (&gfP2{}).Mul(&b.x, z12)
-
-	t := (&gfP2{}).Mul(&b.z, z22)
-	s1 := (&gfP2{}).Mul(&a.y, t)
-
-	t.Mul(&a.z, z12)
-	s2 := (&gfP2{}).Mul(&b.y, t)
-
-	h := (&gfP2{}).Sub(u2, u1)
-	xEqual := h.IsZero()
-
-	t.Add(h, h)
-	i := (&gfP2{}).Square(t)
-	j := (&gfP2{}).Mul(h, i)
-
-	t.Sub(s2, s1)
-	yEqual := t.IsZero()
-	if xEqual && yEqual {
-		c.Double(a)
-		return
-	}
-	r := (&gfP2{}).Add(t, t)
-
-	v := (&gfP2{}).Mul(u1, i)
-
-	t4 := (&gfP2{}).Square(r)
-	t.Add(v, v)
-	t6 := (&gfP2{}).Sub(t4, j)
-	c.x.Sub(t6, t)
-
-	t.Sub(v, &c.x) // t7
-	t4.Mul(s1, j)  // t8
-	t6.Add(t4, t4) // t9
-	t4.Mul(r, t)   // t10
-	c.y.Sub(t4, t6)
-
-	t.Add(&a.z, &b.z) // t11
-	t4.Square(t)      // t12
-	t.Sub(t4, z12)    // t13
-	t4.Sub(t, z22)    // t14
-	c.z.Mul(t4, h)
+	return
 }
+
+// See http://hyperelliptic.org/EFD/g1p/auto-code/shortw/jacobian-0/addition/add-2007-bl.op3
+
+// t7
+// t8
+// t9
+// t10
+
+// t11
+// t12
+// t13
+// t14
 
 func (c *twistPoint) Double(a *twistPoint) {
+	_ = "STUB: not implemented"
 	// See http://hyperelliptic.org/EFD/g1p/auto-code/shortw/jacobian-0/doubling/dbl-2009-l.op3
-	A := (&gfP2{}).Square(&a.x)
-	B := (&gfP2{}).Square(&a.y)
-	C := (&gfP2{}).Square(B)
-
-	t := (&gfP2{}).Add(&a.x, B)
-	t2 := (&gfP2{}).Square(t)
-	t.Sub(t2, A)
-	t2.Sub(t, C)
-	d := (&gfP2{}).Add(t2, t2)
-	t.Add(A, A)
-	e := (&gfP2{}).Add(t, A)
-	f := (&gfP2{}).Square(e)
-
-	t.Add(d, d)
-	c.x.Sub(f, t)
-
-	c.z.Mul(&a.y, &a.z)
-	c.z.Add(&c.z, &c.z)
-
-	t.Add(C, C)
-	t2.Add(t, t)
-	t.Add(t2, t2)
-	c.y.Sub(d, &c.x)
-	t2.Mul(e, &c.y)
-	c.y.Sub(t2, t)
+	return
 }
 
-func (c *twistPoint) Mul(a *twistPoint, scalar *big.Int) {
-	sum, t := &twistPoint{}, &twistPoint{}
-
-	for i := scalar.BitLen(); i >= 0; i-- {
-		t.Double(sum)
-		if scalar.Bit(i) != 0 {
-			sum.Add(t, a)
-		} else {
-			sum.Set(t)
-		}
-	}
-
-	c.Set(sum)
-}
+func (c *twistPoint) Mul(a *twistPoint, scalar *big.Int) { _ = "STUB: not implemented"; return }
 
 // NB: Not safe for concurrent calls
-func (c *twistPoint) MakeAffine() {
-	g := c.Clone()
-	if g.z.IsOne() {
-		return
-	} else if g.z.IsZero() {
-		g.x.SetZero()
-		g.y.SetOne()
-		g.t.SetZero()
-		return
-	}
+func (c *twistPoint) MakeAffine() { _ = "STUB: not implemented"; return }
 
-	zInv := (&gfP2{}).Invert(&g.z)
-	t := (&gfP2{}).Mul(&g.y, zInv)
-	zInv2 := (&gfP2{}).Square(zInv)
-	g.y.Mul(t, zInv2)
-	t.Mul(&g.x, zInv2)
-	g.x.Set(t)
-	g.z.SetOne()
-	g.t.SetOne()
-	c.Set(g)
-}
-
-func (c *twistPoint) Neg(a *twistPoint) {
-	c.x.Set(&a.x)
-	c.y.Neg(&a.y)
-	c.z.Set(&a.z)
-	c.t.SetZero()
-}
+func (c *twistPoint) Neg(a *twistPoint) { _ = "STUB: not implemented"; return }
 
 // Clone makes a deep copy of the point
-func (c *twistPoint) Clone() *twistPoint {
-	n := &twistPoint{
-		x: c.x.Clone(),
-		y: c.y.Clone(),
-		z: c.z.Clone(),
-		t: c.t.Clone(),
-	}
-
-	return n
-}
+func (c *twistPoint) Clone() *twistPoint { _ = "STUB: not implemented"; return nil }

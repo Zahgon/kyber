@@ -27,9 +27,7 @@ type CompletePolicy struct {
 
 // Check verifies that all participants have contributed to a collective
 // signature.
-func (p CompletePolicy) Check(m ParticipationMask) bool {
-	return m.CountEnabled() == m.CountTotal()
-}
+func (p CompletePolicy) Check(m ParticipationMask) bool { _ = "STUB: not implemented"; return false }
 
 // ThresholdPolicy allows to specify a simple t-of-n policy requring that at
 // least the given threshold number of participants t have cosigned to make a
@@ -39,12 +37,8 @@ type ThresholdPolicy struct {
 }
 
 // NewThresholdPolicy returns a new ThresholdPolicy with the given threshold.
-func NewThresholdPolicy(thold int) *ThresholdPolicy {
-	return &ThresholdPolicy{thold: thold}
-}
+func NewThresholdPolicy(thold int) *ThresholdPolicy { _ = "STUB: not implemented"; return nil }
 
 // Check verifies that at least a threshold number of participants have
 // contributed to a collective signature.
-func (p ThresholdPolicy) Check(m ParticipationMask) bool {
-	return m.CountEnabled() >= p.thold
-}
+func (p ThresholdPolicy) Check(m ParticipationMask) bool { _ = "STUB: not implemented"; return false }

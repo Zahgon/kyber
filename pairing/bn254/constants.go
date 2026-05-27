@@ -9,10 +9,7 @@ import (
 	"go.dedis.ch/kyber/v4/compatible/compatiblemod"
 )
 
-func bigFromBase10(s string) *big.Int {
-	n, _ := new(big.Int).SetString(s, 10)
-	return n
-}
+func bigFromBase10(s string) *big.Int { _ = "STUB: not implemented"; return nil }
 
 // u is the BN parameter.
 var u = bigFromBase10("4965661367192848881")

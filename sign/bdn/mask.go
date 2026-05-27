@@ -1,10 +1,6 @@
 package bdn
 
 import (
-	"errors"
-	"fmt"
-	"slices"
-
 	"go.dedis.ch/kyber/v4"
 )
 
@@ -32,190 +28,52 @@ type Mask struct {
 // keys, so it should be re-used for optimal performance (e.g., by creating a "base" mask and
 // cloning it whenever aggregating signatures and/or public keys).
 func NewMask(group kyber.Group, publics []kyber.Point, myKey kyber.Point) (*Mask, error) {
-	m := &Mask{
-		publics: publics,
-	}
-	m.mask = make([]byte, m.Len())
-
-	if myKey != nil {
-		for i, key := range publics {
-			if key.Equal(myKey) {
-				err := m.SetBit(i, true)
-				return m, err
-			}
-		}
-
-		return nil, errors.New("key not found")
-	}
-
-	var err error
-	m.publicCoefs, err = hashPointToR(group, publics)
-	if err != nil {
-		return nil, fmt.Errorf("failed to hash public keys: %w", err)
-	}
-
-	m.publicTerms = make([]kyber.Point, len(publics))
-	for i, pub := range publics {
-		pubC := pub.Clone().Mul(m.publicCoefs[i], pub)
-		m.publicTerms[i] = pubC.Add(pubC, pub)
-	}
-
-	return m, nil
+	_ = "STUB: not implemented"
+	return nil, nil
 }
 
 // Mask returns the bitmask as a byte array.
-func (m *Mask) Mask() []byte {
-	clone := make([]byte, len(m.mask))
-	copy(clone, m.mask)
-	return clone
-}
+func (m *Mask) Mask() []byte { _ = "STUB: not implemented"; return nil }
 
 // Len returns the length of the byte array necessary to store the bitmask.
-func (m *Mask) Len() int {
-	return (len(m.publics) + 7) / 8
-}
+func (m *Mask) Len() int { _ = "STUB: not implemented"; return 0 }
 
 // SetMask replaces the current mask by the new one if the length matches.
-func (m *Mask) SetMask(mask []byte) error {
-	if m.Len() != len(mask) {
-		return errors.New("mismatching mask lengths")
-	}
-
-	m.mask = mask
-	return nil
-}
+func (m *Mask) SetMask(mask []byte) error { _ = "STUB: not implemented"; return nil }
 
 // GetBit returns true if the given bit is set.
-func (m *Mask) GetBit(i int) (bool, error) {
-	if i >= len(m.publics) || i < 0 {
-		return false, errors.New("index out of range")
-	}
-
-	byteIndex := i / 8
-	mask := byte(1) << uint(i&7)
-	return m.mask[byteIndex]&mask != 0, nil
-}
+func (m *Mask) GetBit(i int) (bool, error) { _ = "STUB: not implemented"; return false, nil }
 
 // SetBit turns on or off the bit at the given index.
-func (m *Mask) SetBit(i int, enable bool) error {
-	if i >= len(m.publics) || i < 0 {
-		return errors.New("index out of range")
-	}
-
-	byteIndex := i / 8
-	mask := byte(1) << uint(i&7)
-	if enable {
-		m.mask[byteIndex] |= mask
-	} else {
-		m.mask[byteIndex] &^= mask
-	}
-	return nil
-}
+func (m *Mask) SetBit(i int, enable bool) error { _ = "STUB: not implemented"; return nil }
 
 // forEachBitEnabled is a helper to iterate over the bits set to 1 in the mask
 // and to return the result of the callback only if it is positive.
-func (m *Mask) forEachBitEnabled(f func(i, j, n int) int) int {
-	n := 0
-	for i, b := range m.mask {
-		for j := range 8 {
-			mm := byte(1) << (j & 7)
-
-			if b&mm != 0 {
-				if res := f(i, int(j), n); res >= 0 {
-					return res
-				}
-
-				n++
-			}
-		}
-	}
-
-	return -1
-}
+func (m *Mask) forEachBitEnabled(f func(i, j, n int) int) int { _ = "STUB: not implemented"; return 0 }
 
 // IndexOfNthEnabled returns the index of the nth enabled bit or -1 if out of bounds.
-func (m *Mask) IndexOfNthEnabled(nth int) int {
-	return m.forEachBitEnabled(func(i, j, n int) int {
-		if n == nth {
-			return i*8 + j
-		}
-
-		return -1
-	})
-}
+func (m *Mask) IndexOfNthEnabled(nth int) int { _ = "STUB: not implemented"; return 0 }
 
 // NthEnabledAtIndex returns the sum of bits set to 1 until the given index. In other
 // words, it returns how many bits are enabled before the given index.
-func (m *Mask) NthEnabledAtIndex(idx int) int {
-	return m.forEachBitEnabled(func(i, j, n int) int {
-		if i*8+j == idx {
-			return n
-		}
-
-		return -1
-	})
-}
+func (m *Mask) NthEnabledAtIndex(idx int) int { _ = "STUB: not implemented"; return 0 }
 
 // Publics returns a copy of the list of public keys.
-func (m *Mask) Publics() []kyber.Point {
-	pubs := make([]kyber.Point, len(m.publics))
-	copy(pubs, m.publics)
-	return pubs
-}
+func (m *Mask) Publics() []kyber.Point { _ = "STUB: not implemented"; return nil }
 
 // Participants returns the list of public keys participating.
-func (m *Mask) Participants() []kyber.Point {
-	pp := []kyber.Point{}
-	for i, p := range m.publics {
-		byteIndex := i / 8
-		mask := byte(1) << uint(i&7)
-		if (m.mask[byteIndex] & mask) != 0 {
-			pp = append(pp, p)
-		}
-	}
-
-	return pp
-}
+func (m *Mask) Participants() []kyber.Point { _ = "STUB: not implemented"; return nil }
 
 // CountEnabled returns the number of bit set to 1
-func (m *Mask) CountEnabled() int {
-	count := 0
-	for i := range m.publics {
-		byteIndex := i / 8
-		mask := byte(1) << uint(i&7)
-		if (m.mask[byteIndex] & mask) != 0 {
-			count++
-		}
-	}
-	return count
-}
+func (m *Mask) CountEnabled() int { _ = "STUB: not implemented"; return 0 }
 
 // CountTotal returns the number of potential participants
-func (m *Mask) CountTotal() int {
-	return len(m.publics)
-}
+func (m *Mask) CountTotal() int { _ = "STUB: not implemented"; return 0 }
 
 // Merge merges the given mask to the current one only if
 // the length matches
-func (m *Mask) Merge(mask []byte) error {
-	if len(m.mask) != len(mask) {
-		return errors.New("mismatching mask length")
-	}
-
-	for i := range m.mask {
-		m.mask[i] |= mask[i]
-	}
-
-	return nil
-}
+func (m *Mask) Merge(mask []byte) error { _ = "STUB: not implemented"; return nil }
 
 // Clone copies the mask while keeping the precomputed coefficients, etc. This method is thread safe
 // and does not modify the original mask. Modifications to the new Mask will not affect the original.
-func (m *Mask) Clone() *Mask {
-	return &Mask{
-		mask:        slices.Clone(m.mask),
-		publics:     m.publics,
-		publicCoefs: m.publicCoefs,
-		publicTerms: m.publicTerms,
-	}
-}
+func (m *Mask) Clone() *Mask { _ = "STUB: not implemented"; return nil }

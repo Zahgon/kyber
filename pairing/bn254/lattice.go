@@ -45,75 +45,19 @@ type lattice struct {
 
 // decompose takes a scalar mod Order as input and finds a short, positive decomposition of it wrt to the lattice basis.
 func (l *lattice) decompose(k *big.Int) []*big.Int {
-	n := len(l.inverse)
+	_ = "STUB: not implemented"
 
 	// Calculate closest vector in lattice to <k,0,0,...> with Babai's rounding.
-	c := make([]*big.Int, n)
-	for i := range n {
-		c[i] = new(big.Int).Mul(k, l.inverse[i])
-		round(c[i], l.det)
-	}
-
-	// Transform vectors according to c and subtract <k,0,0,...>.
-	out := make([]*big.Int, n)
-	temp := new(big.Int)
-
-	for i := range n {
-		out[i] = new(big.Int)
-
-		for j := range n {
-			temp.Mul(c[j], l.vectors[j][i])
-			out[i].Add(out[i], temp)
-		}
-
-		out[i].Neg(out[i])
-		out[i].Add(out[i], l.vectors[0][i]).Add(out[i], l.vectors[0][i])
-	}
-	out[0].Add(out[0], k)
-
-	return out
+	return nil
 }
 
-func (l *lattice) Precompute(add func(i, j uint)) {
-	n := uint(len(l.vectors))
-	total := uint(1) << n
+// Transform vectors according to c and subtract <k,0,0,...>.
 
-	for i := range n {
-		for j := range total {
-			if (j>>i)&1 == 1 {
-				add(i, j)
-			}
-		}
-	}
-}
+func (l *lattice) Precompute(add func(i, j uint)) { _ = "STUB: not implemented"; return }
 
-func (l *lattice) Multi(scalar *big.Int) []uint8 {
-	decomp := l.decompose(scalar)
-
-	maxLen := 0
-	for _, x := range decomp {
-		if x.BitLen() > maxLen {
-			maxLen = x.BitLen()
-		}
-	}
-
-	out := make([]uint8, maxLen)
-	for j, x := range decomp {
-		for i := range maxLen {
-			out[i] += uint8(x.Bit(i)) << uint(j)
-		}
-	}
-
-	return out
-}
+func (l *lattice) Multi(scalar *big.Int) []uint8 { _ = "STUB: not implemented"; return nil }
 
 // round sets num to num/denom rounded to the nearest integer.
-func round(num, denom *big.Int) {
-	r := new(big.Int)
-	num.DivMod(num, denom, r)
+func round(num, denom *big.Int) { _ = "STUB: not implemented"; return }
 
-	// todo CondAssignment
-	if r.Cmp(half) == 1 {
-		num.Add(num, big.NewInt(1))
-	}
-}
+// todo CondAssignment

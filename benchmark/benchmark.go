@@ -4,12 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"os"
-	"strconv"
-	"testing"
 
-	"go.dedis.ch/kyber/v4/group/edwards25519"
-	"go.dedis.ch/kyber/v4/sign/anon"
-	"go.dedis.ch/kyber/v4/sign/bls"
 	"go.dedis.ch/kyber/v4/util/test"
 )
 
@@ -20,148 +15,28 @@ var (
 
 // BenchmarkGroup runs benchmarks for the given group and writes the results to a JSON file.
 func benchmarkGroup(name string, description string, gb *test.GroupBench) map[string]any {
-	fmt.Printf("Running benchmarks for group %s...\n", name)
-	results := make(map[string]map[string]testing.BenchmarkResult)
-
-	// Scalar operations
-	results["scalar"] = make(map[string]testing.BenchmarkResult)
-	results["scalar"]["add"] = testing.Benchmark(func(b *testing.B) {
-		gb.ScalarAdd(b.N)
-	})
-	results["scalar"]["sub"] = testing.Benchmark(func(b *testing.B) {
-		gb.ScalarSub(b.N)
-	})
-	results["scalar"]["neg"] = testing.Benchmark(func(b *testing.B) {
-		gb.ScalarNeg(b.N)
-	})
-	results["scalar"]["mul"] = testing.Benchmark(func(b *testing.B) {
-		gb.ScalarMul(b.N)
-	})
-	results["scalar"]["div"] = testing.Benchmark(func(b *testing.B) {
-		gb.ScalarDiv(b.N)
-	})
-	results["scalar"]["inv"] = testing.Benchmark(func(b *testing.B) {
-		gb.ScalarInv(b.N)
-	})
-	results["scalar"]["pick"] = testing.Benchmark(func(b *testing.B) {
-		gb.ScalarPick(b.N)
-	})
-	results["scalar"]["encode"] = testing.Benchmark(func(b *testing.B) {
-		gb.ScalarEncode(b.N)
-	})
-	results["scalar"]["decode"] = testing.Benchmark(func(b *testing.B) {
-		gb.ScalarDecode(b.N)
-	})
-
-	// Point operations
-	results["point"] = make(map[string]testing.BenchmarkResult)
-	results["point"]["add"] = testing.Benchmark(func(b *testing.B) {
-		gb.PointAdd(b.N)
-	})
-	results["point"]["sub"] = testing.Benchmark(func(b *testing.B) {
-		gb.PointSub(b.N)
-	})
-	results["point"]["neg"] = testing.Benchmark(func(b *testing.B) {
-		gb.PointNeg(b.N)
-	})
-	results["point"]["mul"] = testing.Benchmark(func(b *testing.B) {
-		gb.PointMul(b.N)
-	})
-	results["point"]["baseMul"] = testing.Benchmark(func(b *testing.B) {
-		gb.PointBaseMul(b.N)
-	})
-	results["point"]["pick"] = testing.Benchmark(func(b *testing.B) {
-		gb.PointPick(b.N)
-	})
-	results["point"]["encode"] = testing.Benchmark(func(b *testing.B) {
-		gb.PointEncode(b.N)
-	})
-	results["point"]["decode"] = testing.Benchmark(func(b *testing.B) {
-		gb.PointDecode(b.N)
-	})
-
-	result := map[string]any{
-		"group":       name,
-		"description": description,
-		"benchmarks":  results,
-	}
-
-	return result
+	_ = "STUB: not implemented"
+	return nil
 }
+
+// Scalar operations
+
+// Point operations
 
 // BenchmarkSign runs benchmarks for the some signature schemes.
-func benchmarkSign(sigType string) map[string]any {
-	fmt.Printf("Running benchmarks for %s signature scheme...\n", sigType)
-	results := make(map[string]map[string]testing.BenchmarkResult)
-	results["keygen"] = make(map[string]testing.BenchmarkResult)
-	results["sign"] = make(map[string]testing.BenchmarkResult)
-	results["verify"] = make(map[string]testing.BenchmarkResult)
+func benchmarkSign(sigType string) map[string]any { _ = "STUB: not implemented"; return nil }
 
-	benchMessage := []byte("Hello World!")
-	keys := []int{1, 10, 100}
+// Generate keys
 
-	switch sigType {
-	case "anon":
-		// Generate keys
-		for _, i := range keys {
-			results["keygen"][strconv.Itoa(i)] = testing.Benchmark(func(b *testing.B) {
-				for range b.N {
-					anon.BenchGenKeys(edwards25519.NewBlakeSHA256Ed25519(), i)
-				}
-			})
-		}
-		benchPubEd25519, benchPriEd25519 := anon.BenchGenKeys(edwards25519.NewBlakeSHA256Ed25519(), keys[len(keys)-1])
+// Signing
 
-		// Signing
-		for _, i := range keys {
-			results["sign"][strconv.Itoa(i)] = testing.Benchmark(func(b *testing.B) {
-				anon.BenchSign(edwards25519.NewBlakeSHA256Ed25519(), benchPubEd25519[:i], benchPriEd25519, b.N, benchMessage)
-			})
-		}
+// Verification
 
-		// Verification
-		for _, i := range keys {
-			results["verify"][strconv.Itoa(i)] = testing.Benchmark(func(b *testing.B) {
-				anon.BenchVerify(edwards25519.NewBlakeSHA256Ed25519(), benchPubEd25519[:i],
-					anon.BenchGenSig(edwards25519.NewBlakeSHA256Ed25519(), i, benchMessage, benchPubEd25519, benchPriEd25519),
-					b.N, benchMessage)
-			})
-		}
+// Key generation
 
-	case "bls":
-		// Key generation
-		for _, i := range keys {
-			scheme := bls.NewSchemeOnG1(newSignatureSuite())
-			results["keygen"][strconv.Itoa(i)] = testing.Benchmark(func(b *testing.B) {
-				test.BenchCreateKeys(b, scheme, i)
-			})
-		}
+// Signing
 
-		// Signing
-		for _, i := range keys {
-			results["sign"][strconv.Itoa(i)] = testing.Benchmark(func(b *testing.B) {
-				scheme, _, privates, _, _ := test.PrepareBLS(i)
-				test.BenchSign(b, scheme, benchMessage, privates)
-			})
-		}
-
-		// Verification
-		for _, i := range keys {
-			results["verify"][strconv.Itoa(i)] = testing.Benchmark(func(b *testing.B) {
-				scheme, publics, _, msgs, sigs := test.PrepareBLS(i)
-				test.BLSBenchVerify(b, sigs, scheme, publics, msgs)
-			})
-		}
-	}
-
-	result := map[string]any{
-		"name":        sigType,
-		"description": "",
-		"benchmarks":  results,
-	}
-
-	return result
-}
+// Verification
 
 func main() {
 	// Write results to JSON file

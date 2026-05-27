@@ -2,6 +2,7 @@ package kyber
 
 import (
 	"crypto/cipher"
+
 	"go.dedis.ch/kyber/v4/compatible/compatiblemod"
 )
 

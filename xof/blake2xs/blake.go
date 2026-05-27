@@ -16,87 +16,22 @@ type xof struct {
 }
 
 // New creates a new XOF using the blake2s hash.
-func New(seed []byte) kyber.XOF {
-	seed1 := seed
-	var seed2 []byte
-	if len(seed) > blake2s.Size {
-		seed1 = seed[0:blake2s.Size]
-		seed2 = seed[blake2s.Size:]
-	}
+func New(seed []byte) kyber.XOF { _ = "STUB: not implemented"; return *new(kyber.XOF) }
 
-	b, err := blake2s.NewXOF(blake2s.OutputLengthUnknown, seed1)
-	if err != nil {
-		panic("blake2s.NewXOF should not return error: " + err.Error())
-	}
+func (x *xof) Clone() kyber.XOF { _ = "STUB: not implemented"; return *new(kyber.XOF) }
 
-	_, err = b.Write(seed2)
-	if err != nil {
-		panic("blake2s.XOF.Write should not return error: " + err.Error())
-	}
+func (x *xof) Read(dst []byte) (int, error) { _ = "STUB: not implemented"; return 0, nil }
 
-	seedCopy := make([]byte, len(seed2))
-	copy(seedCopy, seed2)
-
-	return &xof{impl: b, seed: seedCopy}
-}
-
-func (x *xof) Clone() kyber.XOF {
-	return &xof{impl: x.impl.Clone()}
-}
-
-func (x *xof) Read(dst []byte) (int, error) {
-	return x.impl.Read(dst)
-}
-
-func (x *xof) Write(src []byte) (int, error) {
-	return x.impl.Write(src)
-}
+func (x *xof) Write(src []byte) (int, error) { _ = "STUB: not implemented"; return 0, nil }
 
 func (x *xof) Reseed() {
+	_ = "STUB: not implemented"
 	// Use New to create a new one seeded with output from the old one.
-	if len(x.key) < 128 {
-		x.key = make([]byte, 128)
-	} else {
-		x.key = x.key[0:128]
-	}
-	_, err := x.Read(x.key)
-	if err != nil {
-		panic("blake xof error: " + err.Error())
-	}
-
-	y := New(x.key)
-	// Steal the XOF implementation, and put it inside of x.
-	yXof, ok := y.(*xof)
-	if !ok {
-		panic("y could not be casted to XOF")
-	}
-	x.impl = yXof.impl
+	return
 }
 
-func (x *xof) Reset() {
-	x.impl.Reset()
-	_, _ = x.impl.Write(x.seed)
-}
+// Steal the XOF implementation, and put it inside of x.
 
-func (x *xof) XORKeyStream(dst, src []byte) {
-	if len(dst) < len(src) {
-		panic("dst too short")
-	}
-	if len(x.key) < len(src) {
-		x.key = make([]byte, len(src))
-	} else {
-		x.key = x.key[0:len(src)]
-	}
+func (x *xof) Reset() { _ = "STUB: not implemented"; return }
 
-	n, err := x.Read(x.key)
-	if err != nil {
-		panic("blake xof error: " + err.Error())
-	}
-	if n != len(src) {
-		panic("short read on key")
-	}
-
-	for i := range src {
-		dst[i] = src[i] ^ x.key[i]
-	}
-}
+func (x *xof) XORKeyStream(dst, src []byte) { _ = "STUB: not implemented"; return }

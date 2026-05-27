@@ -16,67 +16,16 @@ type xof struct {
 }
 
 // New creates a new XOF using the Shake256 hash.
-func New(seed []byte) kyber.XOF {
-	sh := sha3.NewShake256()
-	seedCopy := make([]byte, len(seed))
-	copy(seedCopy, seed)
-	sh.Write(seed)
-	return &xof{sh: sh, seed: seedCopy}
-}
+func New(seed []byte) kyber.XOF { _ = "STUB: not implemented"; return *new(kyber.XOF) }
 
-func (x *xof) Clone() kyber.XOF {
-	return &xof{sh: x.sh.Clone()}
-}
+func (x *xof) Clone() kyber.XOF { _ = "STUB: not implemented"; return *new(kyber.XOF) }
 
-func (x *xof) Reseed() {
-	if len(x.key) < 128 {
-		x.key = make([]byte, 128)
-	} else {
-		x.key = x.key[0:128]
-	}
-	_, err := x.Read(x.key)
-	if err != nil {
-		panic("xof error getting key: " + err.Error())
-	}
-	x.sh = sha3.NewShake256()
-	_, err = x.sh.Write(x.key)
-	if err != nil {
-		panic("xof error writing key: " + err.Error())
-	}
-}
+func (x *xof) Reseed() { _ = "STUB: not implemented"; return }
 
-func (x *xof) Reset() {
-	x.sh.Reset()
-	x.sh.Write(x.seed)
-}
+func (x *xof) Reset() { _ = "STUB: not implemented"; return }
 
-func (x *xof) Read(dst []byte) (int, error) {
-	return x.sh.Read(dst)
-}
+func (x *xof) Read(dst []byte) (int, error) { _ = "STUB: not implemented"; return 0, nil }
 
-func (x *xof) Write(src []byte) (int, error) {
-	return x.sh.Write(src)
-}
+func (x *xof) Write(src []byte) (int, error) { _ = "STUB: not implemented"; return 0, nil }
 
-func (x *xof) XORKeyStream(dst, src []byte) {
-	if len(dst) < len(src) {
-		panic("dst too short")
-	}
-	if len(x.key) < len(src) {
-		x.key = make([]byte, len(src))
-	} else {
-		x.key = x.key[0:len(src)]
-	}
-
-	n, err := x.Read(x.key)
-	if err != nil {
-		panic("xof error getting key: " + err.Error())
-	}
-	if n != len(src) {
-		panic("short read on key")
-	}
-
-	for i := range src {
-		dst[i] = src[i] ^ x.key[i]
-	}
-}
+func (x *xof) XORKeyStream(dst, src []byte) { _ = "STUB: not implemented"; return }

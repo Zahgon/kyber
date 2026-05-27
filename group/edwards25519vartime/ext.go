@@ -4,12 +4,11 @@ package edwards25519vartime
 
 import (
 	"crypto/cipher"
-	"encoding/hex"
-	"go.dedis.ch/kyber/v4/compatible"
 	"io"
 
+	"go.dedis.ch/kyber/v4/compatible"
+
 	"go.dedis.ch/kyber/v4"
-	"go.dedis.ch/kyber/v4/group/internal/marshalling"
 	"go.dedis.ch/kyber/v4/group/mod"
 )
 
@@ -18,50 +17,25 @@ type extPoint struct {
 	c          *ExtendedCurve
 }
 
-func (P *extPoint) initXY(x, y *compatible.Int, c kyber.Group) {
-	P.c = c.(*ExtendedCurve) //nolint:errcheck // Design pattern to emulate generics
+func (P *extPoint) initXY(x, y *compatible.Int, c kyber.Group) { _ = "STUB: not implemented"; return }
 
-	P.X.Init(x, P.c.P.ToCompatibleMod())
-	P.Y.Init(y, P.c.P.ToCompatibleMod())
-	P.Z.Init64(1, P.c.P.ToCompatibleMod())
-	P.T.Mul(&P.X, &P.Y)
-}
+//nolint:errcheck // Design pattern to emulate generics
 
-func (P *extPoint) getXY() (x, y *mod.Int) {
-	P.normalize()
-	return &P.X, &P.Y
-}
+func (P *extPoint) getXY() (x, y *mod.Int) { _ = "STUB: not implemented"; return nil, nil }
 
-func (P *extPoint) String() string {
-	P.normalize()
-	buf, _ := P.MarshalBinary()
-	return hex.EncodeToString(buf)
-}
+func (P *extPoint) String() string { _ = "STUB: not implemented"; return "" }
 
-func (P *extPoint) MarshalSize() int {
-	return P.c.PointLen()
-}
+func (P *extPoint) MarshalSize() int { _ = "STUB: not implemented"; return 0 }
 
-func (P *extPoint) MarshalBinary() ([]byte, error) {
-	P.normalize()
-	return P.c.encodePoint(&P.X, &P.Y), nil
-}
+func (P *extPoint) MarshalBinary() ([]byte, error) { _ = "STUB: not implemented"; return nil, nil }
 
-func (P *extPoint) UnmarshalBinary(b []byte) error {
-	if err := P.c.decodePoint(b, &P.X, &P.Y); err != nil {
-		return err
-	}
-	P.Z.Init64(1, P.c.P.ToCompatibleMod())
-	P.T.Mul(&P.X, &P.Y)
-	return nil
-}
+func (P *extPoint) UnmarshalBinary(b []byte) error { _ = "STUB: not implemented"; return nil }
 
-func (P *extPoint) MarshalTo(w io.Writer) (int, error) {
-	return marshalling.PointMarshalTo(P, w)
-}
+func (P *extPoint) MarshalTo(w io.Writer) (int, error) { _ = "STUB: not implemented"; return 0, nil }
 
 func (P *extPoint) UnmarshalFrom(r io.Reader) (int, error) {
-	return marshalling.PointUnmarshalFrom(P, r)
+	_ = "STUB: not implemented"
+	return 0, nil
 }
 
 // Equality test for two Points on the same curve.
@@ -71,166 +45,83 @@ func (P *extPoint) UnmarshalFrom(r io.Reader) (int, error) {
 //		iff
 //	(X1*Z2,Y1*Z2) == (X2*Z1,Y2*Z1)
 func (P *extPoint) Equal(CP2 kyber.Point) bool {
-	p2 := CP2.(*extPoint) //nolint:errcheck // Design pattern to emulate generics
-	var t1, t2 mod.Int
-	xeq := t1.Mul(&P.X, &p2.Z).Equal(t2.Mul(&p2.X, &P.Z))
-	yeq := t1.Mul(&P.Y, &p2.Z).Equal(t2.Mul(&p2.Y, &P.Z))
-	return xeq && yeq
+	_ = "STUB: not implemented"
+	//nolint:errcheck // Design pattern to emulate generics
+	return false
 }
 
 func (P *extPoint) Set(CP2 kyber.Point) kyber.Point {
-	p2 := CP2.(*extPoint) //nolint:errcheck // Design pattern to emulate generics
-	P.c = p2.c
-	P.X.Set(&p2.X)
-	P.Y.Set(&p2.Y)
-	P.Z.Set(&p2.Z)
-	P.T.Set(&p2.T)
-	return P
+	_ = "STUB: not implemented"
+	return *
+	//nolint:errcheck // Design pattern to emulate generics
+	new(kyber.Point)
 }
 
-func (P *extPoint) Clone() kyber.Point {
-	p2 := extPoint{}
-	p2.c = P.c
-	p2.X.Set(&P.X)
-	p2.Y.Set(&P.Y)
-	p2.Z.Set(&P.Z)
-	p2.T.Set(&P.T)
-	return &p2
-}
+func (P *extPoint) Clone() kyber.Point { _ = "STUB: not implemented"; return *new(kyber.Point) }
 
-func (P *extPoint) Null() kyber.Point {
-	P.Set(&P.c.null)
-	return P
-}
+func (P *extPoint) Null() kyber.Point { _ = "STUB: not implemented"; return *new(kyber.Point) }
 
-func (P *extPoint) Base() kyber.Point {
-	P.Set(&P.c.base)
-	return P
-}
+func (P *extPoint) Base() kyber.Point { _ = "STUB: not implemented"; return *new(kyber.Point) }
 
-func (P *extPoint) EmbedLen() int {
-	return P.c.embedLen()
-}
+func (P *extPoint) EmbedLen() int { _ = "STUB: not implemented"; return 0 }
 
 // Normalize the point's representation to Z=1.
-func (P *extPoint) normalize() {
-	P.Z.Inv(&P.Z)
-	P.X.Mul(&P.X, &P.Z)
-	P.Y.Mul(&P.Y, &P.Z)
-	P.Z.V.SetInt64(1)
-	P.T.Mul(&P.X, &P.Y)
-}
+func (P *extPoint) normalize() { _ = "STUB: not implemented"; return }
 
 // Check the validity of the T coordinate
 //
 //nolint:unused // may be useful
-func (P *extPoint) checkT() {
-	var t1, t2 mod.Int
-	if !t1.Mul(&P.X, &P.Y).Equal(t2.Mul(&P.Z, &P.T)) {
-		panic("oops")
-	}
-}
+func (P *extPoint) checkT() { _ = "STUB: not implemented"; return }
 
 func (P *extPoint) Embed(data []byte, rand cipher.Stream) kyber.Point {
-	P.c.embed(P, data, rand)
-	return P
+	_ = "STUB: not implemented"
+	return *new(kyber.Point)
 }
 
 func (P *extPoint) Pick(rand cipher.Stream) kyber.Point {
-	P.c.embed(P, nil, rand)
-	return P
+	_ = "STUB: not implemented"
+	return *new(kyber.Point)
 }
 
 // Extract embedded data from a point group element
-func (P *extPoint) Data() ([]byte, error) {
-	P.normalize()
-	return P.c.data(&P.X, &P.Y)
-}
+func (P *extPoint) Data() ([]byte, error) { _ = "STUB: not implemented"; return nil, nil }
 
 // Add two points using optimized extended coordinate addition formulas.
 //
 //nolint:dupl //Doesn't make sense to extract part of Add(), Sub(), double()
 func (P *extPoint) Add(CP1, CP2 kyber.Point) kyber.Point {
-	p1 := CP1.(*extPoint) //nolint:errcheck // Design pattern to emulate generics
-	p2 := CP2.(*extPoint) //nolint:errcheck // Design pattern to emulate generics
-	X1, Y1, Z1, T1 := &p1.X, &p1.Y, &p1.Z, &p1.T
-	X2, Y2, Z2, T2 := &p2.X, &p2.Y, &p2.Z, &p2.T
-	X3, Y3, Z3, T3 := &P.X, &P.Y, &P.Z, &P.T
-	var A, B, C, D, E, F, G, H mod.Int
-
-	A.Mul(X1, X2)
-	B.Mul(Y1, Y2)
-	C.Mul(T1, T2).Mul(&C, &P.c.d)
-	D.Mul(Z1, Z2)
-	E.Add(X1, Y1).Mul(&E, F.Add(X2, Y2)).Sub(&E, &A).Sub(&E, &B)
-	F.Sub(&D, &C)
-	G.Add(&D, &C)
-	H.Mul(&P.c.a, &A).Sub(&B, &H)
-	X3.Mul(&E, &F)
-	Y3.Mul(&G, &H)
-	T3.Mul(&E, &H)
-	Z3.Mul(&F, &G)
-	return P
+	_ = "STUB: not implemented"
+	return *
+	//nolint:errcheck // Design pattern to emulate generics
+	new(kyber.Point)
 }
+
+//nolint:errcheck // Design pattern to emulate generics
 
 // Subtract points.
 //
 //nolint:dupl //Doesn't make sense to extract part of Add(), Sub(), double()
 func (P *extPoint) Sub(CP1, CP2 kyber.Point) kyber.Point {
-	p1 := CP1.(*extPoint) //nolint:errcheck // Design pattern to emulate generics
-	p2 := CP2.(*extPoint) //nolint:errcheck // Design pattern to emulate generics
-	X1, Y1, Z1, T1 := &p1.X, &p1.Y, &p1.Z, &p1.T
-	X2, Y2, Z2, T2 := &p2.X, &p2.Y, &p2.Z, &p2.T
-	X3, Y3, Z3, T3 := &P.X, &P.Y, &P.Z, &P.T
-	var A, B, C, D, E, F, G, H mod.Int
-
-	A.Mul(X1, X2)
-	B.Mul(Y1, Y2)
-	C.Mul(T1, T2).Mul(&C, &P.c.d)
-	D.Mul(Z1, Z2)
-	E.Add(X1, Y1).Mul(&E, F.Sub(Y2, X2)).Add(&E, &A).Sub(&E, &B)
-	F.Add(&D, &C)
-	G.Sub(&D, &C)
-	H.Mul(&P.c.a, &A).Add(&B, &H)
-	X3.Mul(&E, &F)
-	Y3.Mul(&G, &H)
-	T3.Mul(&E, &H)
-	Z3.Mul(&F, &G)
-	return P
+	_ = "STUB: not implemented"
+	return *
+	//nolint:errcheck // Design pattern to emulate generics
+	new(kyber.Point)
 }
+
+//nolint:errcheck // Design pattern to emulate generics
 
 // Find the negative of point A.
 // For Edwards curves, the negative of (x,y) is (-x,y).
 func (P *extPoint) Neg(CA kyber.Point) kyber.Point {
-	A := CA.(*extPoint) //nolint:errcheck // Design pattern to emulate generics
-	P.c = A.c
-	P.X.Neg(&A.X)
-	P.Y.Set(&A.Y)
-	P.Z.Set(&A.Z)
-	P.T.Neg(&A.T)
-	return P
+	_ = "STUB: not implemented"
+	//nolint:errcheck // Design pattern to emulate generics
+	return *new(kyber.Point)
 }
 
 // Optimized point doubling for use in scalar multiplication.
 // Uses the formulae in section 3.3 of:
 // https://www.iacr.org/archive/asiacrypt2008/53500329/53500329.pdf
-func (P *extPoint) double() {
-	X1, Y1, Z1, T1 := &P.X, &P.Y, &P.Z, &P.T
-	var A, B, C, D, E, F, G, H mod.Int
-
-	A.Mul(X1, X1)
-	B.Mul(Y1, Y1)
-	C.Mul(Z1, Z1).Add(&C, &C)
-	D.Mul(&P.c.a, &A)
-	E.Add(X1, Y1).Mul(&E, &E).Sub(&E, &A).Sub(&E, &B)
-	G.Add(&D, &B)
-	F.Sub(&G, &C)
-	H.Sub(&D, &B)
-	X1.Mul(&E, &F)
-	Y1.Mul(&G, &H)
-	T1.Mul(&E, &H)
-	Z1.Mul(&F, &G)
-}
+func (P *extPoint) double() { _ = "STUB: not implemented"; return }
 
 // Multiply point p by scalar s using the repeated doubling method.
 //
@@ -238,30 +129,13 @@ func (P *extPoint) double() {
 // switching between projective and extended coordinates during
 // scalar multiplication.
 func (P *extPoint) Mul(s kyber.Scalar, G kyber.Point) kyber.Point {
-	sInt, ok := s.(*mod.Int)
-	if !ok {
-		panic(ErrTypeCast)
-	}
-	v := sInt.V
-	if G == nil {
-		return P.Base().Mul(s, P)
-	}
-	T := P
-	if G == P { // Must use temporary for in-place multiply
-		T = &extPoint{}
-	}
-	T.Set(&P.c.null) // Initialize to identity element (0,1)
-	for i := v.BitLen() - 1; i >= 0; i-- {
-		T.double()
-		if v.Bit(i) != 0 {
-			T.Add(T, G)
-		}
-	}
-	if T != P {
-		P.Set(T)
-	}
-	return P
+	_ = "STUB: not implemented"
+	return *new(kyber.Point)
 }
+
+// Must use temporary for in-place multiply
+
+// Initialize to identity element (0,1)
 
 // ExtendedCurve implements Twisted Edwards curves
 // using projective coordinate representation (X:Y:Z),
@@ -289,15 +163,10 @@ type ExtendedCurve struct {
 }
 
 // Point creates a new Point on this curve.
-func (c *ExtendedCurve) Point() kyber.Point {
-	P := new(extPoint)
-	P.c = c
-
-	return P
-}
+func (c *ExtendedCurve) Point() kyber.Point { _ = "STUB: not implemented"; return *new(kyber.Point) }
 
 // InitCurve initializes the curve with given parameters.
 func (c *ExtendedCurve) InitCurve(p *Param, fullGroup bool) *ExtendedCurve {
-	c.init(c, p, fullGroup, &c.null, &c.base)
-	return c
+	_ = "STUB: not implemented"
+	return nil
 }

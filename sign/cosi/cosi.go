@@ -46,8 +46,6 @@ here.
 package cosi
 
 import (
-	"errors"
-
 	"go.dedis.ch/kyber/v4"
 )
 
@@ -55,9 +53,8 @@ import (
 // and a corresponding commitment V = [v]G. If the given cipher stream is nil,
 // a random stream is used.
 func Commit(suite Suite) (v kyber.Scalar, V kyber.Point) {
-	random := suite.Scalar().Pick(suite.RandomStream())
-	commitment := suite.Point().Mul(random, nil)
-	return random, commitment
+	_ = "STUB: not implemented"
+	return *new(kyber.Scalar), *new(kyber.Point)
 }
 
 // AggregateCommitments returns the sum of the given commitments and the
@@ -67,175 +64,55 @@ func AggregateCommitments(
 	commitments []kyber.Point,
 	masks [][]byte,
 ) (sum kyber.Point, commits []byte, err error) {
-	if len(commitments) != len(masks) {
-		return nil, nil, errors.New("mismatching lengths of commitment and mask slices")
-	}
-	aggCom := suite.Point().Null()
-	aggMask := make([]byte, len(masks[0]))
-
-	for i := range commitments {
-		aggCom = suite.Point().Add(aggCom, commitments[i])
-		aggMask, err = AggregateMasks(aggMask, masks[i])
-		if err != nil {
-			return nil, nil, err
-		}
-	}
-	return aggCom, aggMask, nil
+	_ = "STUB: not implemented"
+	return *new(kyber.Point), nil, nil
 }
 
 // Challenge creates the collective challenge from the given aggregate
 // commitment V, aggregate public key A, and message M, i.e., it returns
 // c = H(V || A || M).
 func Challenge(suite Suite, commitment, public kyber.Point, message []byte) (kyber.Scalar, error) {
-	if commitment == nil {
-		return nil, errors.New("no commitment provided")
-	}
-	if message == nil {
-		return nil, errors.New("no message provided")
-	}
-	hash := suite.Hash()
-	if _, err := commitment.MarshalTo(hash); err != nil {
-		return nil, err
-	}
-	if _, err := public.MarshalTo(hash); err != nil {
-		return nil, err
-	}
-	hash.Write(message)
-	return suite.Scalar().SetBytes(hash.Sum(nil)), nil
+	_ = "STUB: not implemented"
+	return *new(kyber.Scalar), nil
 }
 
 // Response creates the response from the given random scalar v, (collective)
 // challenge c, and private key a, i.e., it returns r = v + c*a.
 func Response(suite Suite, private, random, challenge kyber.Scalar) (kyber.Scalar, error) {
-	if private == nil {
-		return nil, errors.New("no private key provided")
-	}
-	if random == nil {
-		return nil, errors.New("no random scalar provided")
-	}
-	if challenge == nil {
-		return nil, errors.New("no challenge provided")
-	}
-	ca := suite.Scalar().Mul(private, challenge)
-	return ca.Add(random, ca), nil
+	_ = "STUB: not implemented"
+	return *new(kyber.Scalar), nil
 }
 
 // AggregateResponses returns the sum of given responses.
 func AggregateResponses(suite Suite, responses []kyber.Scalar) (kyber.Scalar, error) {
-	if responses == nil {
-		return nil, errors.New("no responses provided")
-	}
-	r := suite.Scalar().Zero()
-	for i := range responses {
-		r = r.Add(r, responses[i])
-	}
-	return r, nil
+	_ = "STUB: not implemented"
+	return *new(kyber.Scalar), nil
 }
 
 // Sign returns the collective signature from the given (aggregate) commitment
 // V, (aggregate) response r, and participation bitmask Z using the EdDSA
 // format, i.e., the signature is V || r || Z.
 func Sign(suite Suite, commitment kyber.Point, response kyber.Scalar, mask *Mask) ([]byte, error) {
-	if commitment == nil {
-		return nil, errors.New("no commitment provided")
-	}
-	if response == nil {
-		return nil, errors.New("no response provided")
-	}
-	if mask == nil {
-		return nil, errors.New("no mask provided")
-	}
-	lenV := suite.PointLen()
-	lenSig := lenV + suite.ScalarLen()
-	VB, err := commitment.MarshalBinary()
-	if err != nil {
-		return nil, errors.New("marshalling of commitment failed")
-	}
-	RB, err := response.MarshalBinary()
-	if err != nil {
-		return nil, errors.New("marshalling of signature failed")
-	}
-	sig := make([]byte, lenSig+mask.Len())
-	copy(sig, VB)
-	copy(sig[lenV:lenSig], RB)
-	copy(sig[lenSig:], mask.mask)
-	return sig, nil
+	_ = "STUB: not implemented"
+	return nil, nil
 }
 
 // Verify checks the given cosignature on the provided message using the list
 // of public keys and cosigning policy.
 func Verify(suite Suite, publics []kyber.Point, message, sig []byte, policy Policy) error {
-	if publics == nil {
-		return errors.New("no public keys provided")
-	}
-	if message == nil {
-		return errors.New("no message provided")
-	}
-	if sig == nil {
-		return errors.New("no signature provided")
-	}
-	if policy == nil {
-		policy = CompletePolicy{}
-	}
-
-	lenCom := suite.PointLen()
-	if len(sig) < lenCom {
-		return errors.New("signature too short")
-	}
-	VBuff := sig[:lenCom]
-	V := suite.Point()
-	if err := V.UnmarshalBinary(VBuff); err != nil {
-		return errors.New("unmarshalling of commitment failed")
-	}
-
-	// Unpack the aggregate response
-	lenRes := lenCom + suite.ScalarLen()
-	if len(sig) < lenRes {
-		return errors.New("signature too short")
-	}
-	rBuff := sig[lenCom:lenRes]
-	r := suite.Scalar().SetBytes(rBuff)
-
-	// Unpack the participation mask and get the aggregate public key
-	mask, err := NewMask(suite, publics, nil)
-	if err != nil {
-		return err
-	}
-	err = mask.SetMask(sig[lenRes:])
-	if err != nil {
-		return err
-	}
-	A := mask.AggregatePublic
-	ABuff, err := A.MarshalBinary()
-	if err != nil {
-		return errors.New("marshalling of aggregate public key failed")
-	}
-
-	// Recompute the challenge
-	hash := suite.Hash()
-	hash.Write(VBuff)
-	hash.Write(ABuff)
-	hash.Write(message)
-	buff := hash.Sum(nil)
-	k := suite.Scalar().SetBytes(buff)
-
-	// k * -aggPublic + s * B = k*-A + s*B
-	// from s = k * a + r => s * B = k * a * B + r * B <=> s*B = k*A + r*B
-	// <=> s*B + k*-A = r*B
-	minusPublic := suite.Point().Neg(A)
-	kA := suite.Point().Mul(k, minusPublic)
-	sB := suite.Point().Mul(r, nil)
-	left := suite.Point().Add(kA, sB)
-
-	if !left.Equal(V) {
-		return errors.New("recreated response is different from signature")
-	}
-	if !policy.Check(mask) {
-		return errors.New("the policy is not fulfilled")
-	}
-
+	_ = "STUB: not implemented"
 	return nil
 }
+
+// Unpack the aggregate response
+
+// Unpack the participation mask and get the aggregate public key
+
+// Recompute the challenge
+
+// k * -aggPublic + s * B = k*-A + s*B
+// from s = k * a + r => s * B = k * a * B + r * B <=> s*B = k*A + r*B
+// <=> s*B + k*-A = r*B
 
 // ParticipationMask is an interface to get the total number of candidates
 // and the number of participants.
@@ -258,135 +135,56 @@ type Mask struct {
 // it is present in the list of keys and sets the corresponding index in the
 // bitmask to 1 (enabled).
 func NewMask(suite Suite, publics []kyber.Point, myKey kyber.Point) (*Mask, error) {
-	m := &Mask{
-		publics: publics,
-	}
-	m.mask = make([]byte, m.Len())
-	m.AggregatePublic = suite.Point().Null()
-	if myKey != nil {
-		found := false
-		for i, key := range publics {
-			if key.Equal(myKey) {
-				err := m.SetBit(i, true)
-				if err != nil {
-					return nil, err
-				}
-				found = true
-				break
-			}
-		}
-		if !found {
-			return nil, errors.New("key not found")
-		}
-	}
-	return m, nil
+	_ = "STUB: not implemented"
+	return nil, nil
 }
 
 // Mask returns a copy of the participation bitmask.
-func (m *Mask) Mask() []byte {
-	clone := make([]byte, len(m.mask))
-	copy(clone, m.mask)
-	return clone
-}
+func (m *Mask) Mask() []byte { _ = "STUB: not implemented"; return nil }
 
 // Len returns the mask length in bytes.
-func (m *Mask) Len() int {
-	return (len(m.publics) + 7) >> 3
-}
+func (m *Mask) Len() int { _ = "STUB: not implemented"; return 0 }
 
 // SetMask sets the participation bitmask according to the given byte slice
 // interpreted in little-endian order, i.e., bits 0-7 of byte 0 correspond to
 // cosigners 0-7, bits 0-7 of byte 1 correspond to cosigners 8-15, etc.
-func (m *Mask) SetMask(mask []byte) error {
-	if m.Len() != len(mask) {
-		return errors.New("mismatching mask lengths")
-	}
-	for i := range m.publics {
-		byt := i >> 3
-		msk := byte(1) << uint(i&7)
-		if ((m.mask[byt] & msk) == 0) && ((mask[byt] & msk) != 0) {
-			m.mask[byt] ^= msk // flip bit in mask from 0 to 1
-			m.AggregatePublic.Add(m.AggregatePublic, m.publics[i])
-		}
-		if ((m.mask[byt] & msk) != 0) && ((mask[byt] & msk) == 0) {
-			m.mask[byt] ^= msk // flip bit in mask from 1 to 0
-			m.AggregatePublic.Sub(m.AggregatePublic, m.publics[i])
-		}
-	}
-	return nil
-}
+func (m *Mask) SetMask(mask []byte) error { _ = "STUB: not implemented"; return nil }
+
+// flip bit in mask from 0 to 1
+
+// flip bit in mask from 1 to 0
 
 // SetBit enables (enable: true) or disables (enable: false) the bit
 // in the participation mask of the given cosigner.
-func (m *Mask) SetBit(i int, enable bool) error {
-	if i >= len(m.publics) {
-		return errors.New("index out of range")
-	}
-	byt := i >> 3
-	msk := byte(1) << uint(i&7)
-	if ((m.mask[byt] & msk) == 0) && enable {
-		m.mask[byt] ^= msk // flip bit in mask from 0 to 1
-		m.AggregatePublic.Add(m.AggregatePublic, m.publics[i])
-	}
-	if ((m.mask[byt] & msk) != 0) && !enable {
-		m.mask[byt] ^= msk // flip bit in mask from 1 to 0
-		m.AggregatePublic.Sub(m.AggregatePublic, m.publics[i])
-	}
-	return nil
-}
+func (m *Mask) SetBit(i int, enable bool) error { _ = "STUB: not implemented"; return nil }
+
+// flip bit in mask from 0 to 1
+
+// flip bit in mask from 1 to 0
 
 // IndexEnabled checks whether the given index is enabled in the mask or not.
-func (m *Mask) IndexEnabled(i int) (bool, error) {
-	if i >= len(m.publics) {
-		return false, errors.New("index out of range")
-	}
-	byt := i >> 3
-	msk := byte(1) << uint(i&7)
-	return ((m.mask[byt] & msk) != 0), nil
-}
+func (m *Mask) IndexEnabled(i int) (bool, error) { _ = "STUB: not implemented"; return false, nil }
 
 // KeyEnabled checks whether the index, corresponding to the given key, is
 // enabled in the mask or not.
 func (m *Mask) KeyEnabled(public kyber.Point) (bool, error) {
-	for i, key := range m.publics {
-		if key.Equal(public) {
-			return m.IndexEnabled(i)
-		}
-	}
-	return false, errors.New("key not found")
+	_ = "STUB: not implemented"
+	return false, nil
 }
 
 // CountEnabled returns the number of enabled nodes in the CoSi participation
 // mask.
 func (m *Mask) CountEnabled() int {
+	_ = "STUB: not implemented"
 	// hw is hamming weight
-	hw := 0
-	for i := range m.publics {
-		byt := i >> 3
-		msk := byte(1) << uint(i&7)
-		if (m.mask[byt] & msk) != 0 {
-			hw++
-		}
-	}
-	return hw
+	return 0
 }
 
 // CountTotal returns the total number of nodes this CoSi instance knows.
-func (m *Mask) CountTotal() int {
-	return len(m.publics)
-}
+func (m *Mask) CountTotal() int { _ = "STUB: not implemented"; return 0 }
 
 // AggregateMasks computes the bitwise OR of the two given participation masks.
-func AggregateMasks(a, b []byte) ([]byte, error) {
-	if len(a) != len(b) {
-		return nil, errors.New("mismatching mask lengths")
-	}
-	m := make([]byte, len(a))
-	for i := range m {
-		m[i] = a[i] | b[i]
-	}
-	return m, nil
-}
+func AggregateMasks(a, b []byte) ([]byte, error) { _ = "STUB: not implemented"; return nil, nil }
 
 // Policy represents a fully customizable cosigning policy deciding what
 // cosigner sets are and aren't sufficient for a collective signature to be
@@ -410,9 +208,7 @@ type CompletePolicy struct {
 
 // Check verifies that all participants have contributed to a collective
 // signature.
-func (p CompletePolicy) Check(m ParticipationMask) bool {
-	return m.CountEnabled() == m.CountTotal()
-}
+func (p CompletePolicy) Check(m ParticipationMask) bool { _ = "STUB: not implemented"; return false }
 
 // ThresholdPolicy allows to specify a simple t-of-n policy requring that at
 // least the given threshold number of participants t have cosigned to make a
@@ -426,12 +222,8 @@ type ThresholdPolicy struct {
 // NewThresholdPolicy returns a new ThresholdPolicy with the given threshold.
 //
 // Deprecated: the policy has moved to the package kyber/sign
-func NewThresholdPolicy(thold int) *ThresholdPolicy {
-	return &ThresholdPolicy{thold: thold}
-}
+func NewThresholdPolicy(thold int) *ThresholdPolicy { _ = "STUB: not implemented"; return nil }
 
 // Check verifies that at least a threshold number of participants have
 // contributed to a collective signature.
-func (p ThresholdPolicy) Check(m ParticipationMask) bool {
-	return m.CountEnabled() >= p.thold
-}
+func (p ThresholdPolicy) Check(m ParticipationMask) bool { _ = "STUB: not implemented"; return false }

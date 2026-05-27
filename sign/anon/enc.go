@@ -1,43 +1,28 @@
 package anon
 
 import (
-	"crypto/subtle"
-	"errors"
-
 	"go.dedis.ch/kyber/v4"
-	"go.dedis.ch/kyber/v4/util/key"
 )
 
 func header(suite Suite, _ kyber.Point, x kyber.Scalar,
 	xb1, xb2 []byte, anonymitySet Set) []byte {
+	_ = "STUB: not implemented"
 
 	// Encrypt the master scalar key with each public key in the set
-	S := suite.Point()
-	hdr := xb1
-	for i := range anonymitySet {
-		Y := anonymitySet[i]
-		S.Mul(x, Y) // compute DH shared secret
-		seed, _ := S.MarshalBinary()
-		xof := suite.XOF(seed)
-		xc := make([]byte, len(xb2))
-		xof.XORKeyStream(xc, xb2)
-		hdr = append(hdr, xc...)
-	}
-	return hdr
+	return nil
 }
+
+// compute DH shared secret
 
 // Create and encrypt a fresh key decryptable only by the given receivers.
 // Returns the secret key and the ciphertext.
 func encryptKey(suite Suite, anonymitySet Set) (k, c []byte) {
+	_ = "STUB: not implemented"
 	// Choose a keypair and encode its representation
-	kp := new(key.Pair)
-	var Xb []byte
-	kp.Gen(suite)
-	Xb, _ = kp.Public.MarshalBinary()
-	xb, _ := kp.Private.MarshalBinary()
-	// Generate the ciphertext header
-	return xb, header(suite, kp.Public, kp.Private, Xb, xb, anonymitySet)
+	return nil, nil
 }
+
+// Generate the ciphertext header
 
 // Decrypt and verify a key encrypted via encryptKey.
 // On success, returns the key and the length of the decrypted header.
@@ -48,69 +33,22 @@ func decryptKey(
 	mine int,
 	privateKey kyber.Scalar,
 ) ([]byte, int, error) {
+	_ = "STUB: not implemented"
 	// Decode the (supposed) ephemeral public key from the front
-	X := suite.Point()
-	var Xb []byte
-	enclen := X.MarshalSize()
-	if len(ciphertext) < enclen {
-		return nil, 0, errors.New("ciphertext too short")
-	}
-	if err := X.UnmarshalBinary(ciphertext[:enclen]); err != nil {
-		return nil, 0, err
-	}
-	Xb = ciphertext[:enclen]
-	Xblen := len(Xb)
-
-	// Decode the (supposed) master secret with our private key
-	nkeys := len(anonymitySet)
-	if mine < 0 || mine >= nkeys {
-		panic("private-key index out of range")
-	}
-	seclen := suite.ScalarLen()
-	if len(ciphertext) < Xblen+seclen*nkeys {
-		return nil, 0, errors.New("ciphertext too short")
-	}
-	S := suite.Point().Mul(privateKey, X)
-	seed, _ := S.MarshalBinary()
-	xof := suite.XOF(seed)
-	xb := make([]byte, seclen)
-	secofs := Xblen + seclen*mine
-	xof.XORKeyStream(xb, ciphertext[secofs:secofs+seclen])
-	x := suite.Scalar()
-	if err := x.UnmarshalBinary(xb); err != nil {
-		return nil, 0, err
-	}
-
-	// Make sure it reproduces the correct ephemeral public key
-	Xv := suite.Point().Mul(x, nil)
-	if !X.Equal(Xv) {
-		return nil, 0, errors.New("invalid ciphertext")
-	}
-
-	// Regenerate and check the rest of the header,
-	// to ensure that any of the anonymitySet members could decrypt it
-	hdr := header(suite, X, x, Xb, xb, anonymitySet)
-	hdrlen := len(hdr)
-	if hdrlen != Xblen+seclen*nkeys {
-		panic("wrong header size")
-	}
-	if subtle.ConstantTimeCompare(hdr, ciphertext[:hdrlen]) == 0 {
-		return nil, 0, errors.New("invalid ciphertext")
-	}
-
-	return xb, hdrlen, nil
+	return nil, 0, nil
 }
+
+// Decode the (supposed) master secret with our private key
+
+// Make sure it reproduces the correct ephemeral public key
+
+// Regenerate and check the rest of the header,
+// to ensure that any of the anonymitySet members could decrypt it
 
 // constantTimeAllEq returns 1 iff all bytes in slice x have the value y.
 // The time taken is a function of the length of the slices
 // and is independent of the contents.
-func constantTimeAllEq(x []byte, y byte) int {
-	var z byte
-	for _, b := range x {
-		z |= b ^ y
-	}
-	return subtle.ConstantTimeByteEq(z, 0)
-}
+func constantTimeAllEq(x []byte, y byte) int { _ = "STUB: not implemented"; return 0 }
 
 // macSize is how long the hashes are that we extract from the XOF.
 // This constant of 16 is taken from the previous implementation's behavior.
@@ -122,30 +60,13 @@ const macSize = 16
 // this reduces to conventional single-receiver public-key encryption.
 func Encrypt(suite Suite, message []byte,
 	anonymitySet Set) ([]byte, error) {
-
-	xb, hdr := encryptKey(suite, anonymitySet)
-	xof := suite.XOF(xb)
-
-	// We now know the ciphertext layout
-	hdrhi := 0 + len(hdr)
-	msghi := hdrhi + len(message)
-	machi := msghi + macSize
-	ciphertext := make([]byte, machi)
-	copy(ciphertext, hdr)
-
-	// Now encrypt and MAC the message based on the master secret
-	ctx := ciphertext[hdrhi:msghi]
-	mac := ciphertext[msghi:machi]
-
-	xof.XORKeyStream(ctx, message)
-	xof = suite.XOF(ctx)
-	_, err := xof.Read(mac)
-	if err != nil {
-		return nil, err
-	}
-
-	return ciphertext, nil
+	_ = "STUB: not implemented"
+	return nil, nil
 }
+
+// We now know the ciphertext layout
+
+// Now encrypt and MAC the message based on the master secret
 
 // Decrypt a message encrypted for a particular anonymity set.
 // Returns the cleartext message on success, or an error on failure.
@@ -163,30 +84,11 @@ func Encrypt(suite Suite, message []byte,
 // that is, it is infeasible for a sender to construct any ciphertext
 // that will be accepted by the receiver without knowing the plaintext.
 func Decrypt(suite Suite, ciphertext []byte, anonymitySet Set, mine int, privateKey kyber.Scalar) ([]byte, error) {
+	_ = "STUB: not implemented"
 	// Decrypt and check the encrypted key-header.
-	xb, hdrlen, err := decryptKey(suite, ciphertext, anonymitySet,
-		mine, privateKey)
-	if err != nil {
-		return nil, err
-	}
-
-	// Determine the message layout
-	xof := suite.XOF(xb)
-	if len(ciphertext) < hdrlen+macSize {
-		return nil, errors.New("ciphertext too short")
-	}
-	hdrhi := hdrlen
-	msghi := len(ciphertext) - macSize
-
-	// Decrypt the message and check the MAC
-	ctx := ciphertext[hdrhi:msghi]
-	mac := ciphertext[msghi:]
-	msg := make([]byte, len(ctx))
-	xof.XORKeyStream(msg, ctx)
-	xof = suite.XOF(ctx)
-	xof.XORKeyStream(mac, mac)
-	if constantTimeAllEq(mac, 0) == 0 {
-		return nil, errors.New("invalid ciphertext: failed MAC check")
-	}
-	return msg, nil
+	return nil, nil
 }
+
+// Determine the message layout
+
+// Decrypt the message and check the MAC

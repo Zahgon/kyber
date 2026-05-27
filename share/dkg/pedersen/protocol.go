@@ -1,9 +1,6 @@
 package dkg
 
 import (
-	"bytes"
-	"fmt"
-	"slices"
 	"time"
 )
 
@@ -41,35 +38,22 @@ type TimePhaser struct {
 	sleep func(Phase)
 }
 
-func NewTimePhaser(p time.Duration) *TimePhaser {
-	return NewTimePhaserFunc(func(Phase) { time.Sleep(p) })
-}
+func NewTimePhaser(p time.Duration) *TimePhaser { _ = "STUB: not implemented"; return nil }
 
-func NewTimePhaserFunc(sleepPeriod func(Phase)) *TimePhaser {
-	return &TimePhaser{
-		out:   make(chan Phase, 4),
-		sleep: sleepPeriod,
-	}
-}
+func NewTimePhaserFunc(sleepPeriod func(Phase)) *TimePhaser { _ = "STUB: not implemented"; return nil }
 
-func (t *TimePhaser) Start() {
-	t.out <- DealPhase
-	t.sleep(DealPhase)
-	t.out <- ResponsePhase
-	t.sleep(ResponsePhase)
-	t.out <- JustifPhase
-	t.sleep(JustifPhase)
-	t.out <- FinishPhase
-}
+func (t *TimePhaser) Start() { _ = "STUB: not implemented"; return }
 
 func (t *TimePhaser) NextPhase() chan Phase {
-	return t.out
+	_ = "STUB: not implemented"
+
+	// Protocol contains the logic to run a DKG protocol over a generic broadcast
+	// channel, called Board. It handles the receival of packets, ordering of the
+	// phases and the termination. A protocol can be ran over a network, a smart
+	// contract, or anything else that is implemented via the Board interface.
+	return nil
 }
 
-// Protocol contains the logic to run a DKG protocol over a generic broadcast
-// channel, called Board. It handles the receival of packets, ordering of the
-// phases and the termination. A protocol can be ran over a network, a smart
-// contract, or anything else that is implemented via the Board interface.
 type Protocol struct {
 	board     Board
 	phaser    Phaser
@@ -80,269 +64,53 @@ type Protocol struct {
 }
 
 func NewProtocol(c *Config, b Board, phaser Phaser, skipVerification bool) (*Protocol, error) {
-	dkg, err := NewDistKeyHandler(c)
-	if err != nil {
-		return nil, err
-	}
-	p := &Protocol{
-		board:     b,
-		phaser:    phaser,
-		dkg:       dkg,
-		canIssue:  dkg.canIssue,
-		res:       make(chan OptionResult, 1),
-		skipVerif: skipVerification,
-	}
-	go p.Start()
-	return p, nil
+	_ = "STUB: not implemented"
+	return nil, nil
 }
 
-func (p *Protocol) Info(keyvals ...any) {
-	p.dkg.c.Info("dkg-step", keyvals)
-}
+func (p *Protocol) Info(keyvals ...any) { _ = "STUB: not implemented"; return }
 
-func (p *Protocol) Error(keyvals ...any) {
-	p.dkg.c.Error("dkg-step", keyvals)
-}
+func (p *Protocol) Error(keyvals ...any) { _ = "STUB: not implemented"; return }
 
-func (p *Protocol) Start() {
-	var fastSync = p.dkg.c.FastSync
-	if fastSync {
-		p.startFast()
-		return
-	}
-	var deals = newSet()
-	var resps = newSet()
-	var justifs = newSet()
-	for {
-		select {
-		case newPhase := <-p.phaser.NextPhase():
-			switch newPhase {
-			case InitPhase:
-			case DealPhase:
-				if !p.sendDeals() {
-					return
-				}
-			case ResponsePhase:
-				if !p.sendResponses(deals.ToDeals()) {
-					return
-				}
-			case JustifPhase:
-				if !p.sendJustifications(resps.ToResponses()) {
-					return
-				}
-			case FinishPhase:
-				p.finish(justifs.ToJustifications())
-				return
-			}
-		case newDeal := <-p.board.IncomingDeal():
-			if err := p.verify(&newDeal); err == nil {
-				deals.Push(&newDeal)
-			}
-		case newResp := <-p.board.IncomingResponse():
-			if err := p.verify(&newResp); err == nil {
-				resps.Push(&newResp)
-			}
-		case newJust := <-p.board.IncomingJustification():
-			if err := p.verify(&newJust); err == nil {
-				justifs.Push(&newJust)
-			}
-		}
-	}
-}
+func (p *Protocol) Start() { _ = "STUB: not implemented"; return }
 
-func (p *Protocol) startFast() {
-	var deals = newSet()
-	var resps = newSet()
-	var justifs = newSet()
-	var newN = len(p.dkg.c.NewNodes)
-	var oldN = len(p.dkg.c.OldNodes)
-	// we keep the phase in sync with the dkg phase
-	phase := func() Phase {
-		return p.dkg.state
-	}
-	// each of the following function returns true or false depending on whether
-	// the protocol should be aborted or not.
-	toResp := func() bool {
-		// for all dealers, we should be in the DealPhase
-		if p.canIssue && phase() != DealPhase {
-			return true
-		}
-		// for all *new* share holders, we should be in the InitPhase
-		if !p.canIssue && phase() != InitPhase {
-			return true
-		}
-		return p.sendResponses(deals.ToDeals())
-	}
+func (p *Protocol) startFast() { _ = "STUB: not implemented"; return }
 
-	toJust := func() bool {
-		if phase() != ResponsePhase {
-			return true
-		}
-		return p.sendJustifications(resps.ToResponses())
-	}
-	// always return false when we are in the finish phase - we quit the
-	// protocol.
-	toFinish := func() bool {
-		if phase() != JustifPhase {
-			return true
-		}
-		p.finish(justifs.ToJustifications())
-		return false
-	}
-	for {
-		select {
-		case newPhase := <-p.phaser.NextPhase():
-			switch newPhase {
-			case InitPhase:
-			case DealPhase:
-				p.Info("phaser", "msg", "moving to sending deals phase")
-				if !p.sendDeals() {
-					return
-				}
-			case ResponsePhase:
-				p.Info("phaser", "msg", fmt.Sprintf("moving to response phase, got %d deals", deals.Len()))
-				if !toResp() {
-					return
-				}
-			case JustifPhase:
-				p.Info("phaser", "msg", fmt.Sprintf("moving to justifications phase, got %d resps", resps.Len()))
-				if !toJust() {
-					return
-				}
-			case FinishPhase:
-				// whatever happens here, if phaser says it's finished we finish
-				toFinish()
-				return
-			}
-		case newDeal, ok := <-p.board.IncomingDeal():
-			if !ok {
-				p.Error("incoming deal channel closed unexpectedly")
-				return
-			}
+// we keep the phase in sync with the dkg phase
 
-			if err := p.verify(&newDeal); err == nil {
-				deals.Push(&newDeal)
-			} else {
-				p.Error("newDeal", "invalid deal signature:", err)
-			}
+// each of the following function returns true or false depending on whether
+// the protocol should be aborted or not.
 
-			if deals.Len() == oldN {
-				p.Info("newDeal", "fast moving to response phase", fmt.Sprintf(" got %d deals", oldN))
-				if !toResp() {
-					return
-				}
-			}
-		case newResp, ok := <-p.board.IncomingResponse():
-			if !ok {
-				p.Error("incoming response channel closed unexpectedly")
-				return
-			}
-			if err := p.verify(&newResp); err == nil {
-				resps.Push(&newResp)
-			} else {
-				p.Error("newResp", "Received invalid response signature:", err)
-			}
-			if resps.Len() == newN {
-				p.Info("newResp", "fast moving to justifications phase", fmt.Sprintf("got %d resps", newN))
-				if !toJust() {
-					return
-				}
-			}
-		case newJust, ok := <-p.board.IncomingJustification():
-			if !ok {
-				p.Error("incoming justification channel closed unexpectedly")
-				return
-			}
-			if err := p.verify(&newJust); err == nil {
-				justifs.Push(&newJust)
-			} else {
-				p.Error("newJust", "invalid justification signature:", err)
-			}
-			if justifs.Len() == oldN {
-				// we finish only if it's time to do so, maybe we received
-				// justifications but are not in the right phase yet since it
-				// may not be the right time or haven't received enough msg from
-				// previous phase
-				if !toFinish() {
-					p.Info("newJust", "fast moving to finish phase", fmt.Sprintf("got %d resps", justifs.Len()))
-					return
-				}
-			}
-		}
-	}
-}
+// for all dealers, we should be in the DealPhase
 
-func (p *Protocol) verify(packet Packet) error {
-	if p.skipVerif {
-		return nil
-	}
+// for all *new* share holders, we should be in the InitPhase
 
-	return VerifyPacketSignature(p.dkg.c, packet)
-}
+// always return false when we are in the finish phase - we quit the
+// protocol.
 
-func (p *Protocol) sendDeals() bool {
-	if !p.canIssue {
-		return true
-	}
-	bundle, err := p.dkg.Deals()
-	if err != nil {
-		p.res <- OptionResult{
-			Error: err,
-		}
-		return false
-	}
-	if bundle != nil {
-		p.Info("sendDeals", "Sending out deal bundle", fmt.Sprintf("%d deals", len(bundle.Deals)))
-		p.board.PushDeals(bundle)
-	}
-	return true
-}
+// whatever happens here, if phaser says it's finished we finish
 
-func (p *Protocol) sendResponses(deals []*DealBundle) bool {
-	bundle, err := p.dkg.ProcessDeals(deals)
-	if err != nil {
-		p.res <- OptionResult{
-			Error: err,
-		}
-		// we signal the end since we can't go on
-		return false
-	}
-	if bundle != nil {
-		p.Info("sendResponses", "sending out response bundle", fmt.Sprintf("from %d deals", len(deals)))
-		p.board.PushResponses(bundle)
-	}
-	return true
-}
+// we finish only if it's time to do so, maybe we received
+// justifications but are not in the right phase yet since it
+// may not be the right time or haven't received enough msg from
+// previous phase
+
+func (p *Protocol) verify(packet Packet) error { _ = "STUB: not implemented"; return nil }
+
+func (p *Protocol) sendDeals() bool { _ = "STUB: not implemented"; return false }
+
+func (p *Protocol) sendResponses(deals []*DealBundle) bool { _ = "STUB: not implemented"; return false }
+
+// we signal the end since we can't go on
 
 func (p *Protocol) sendJustifications(resps []*ResponseBundle) bool {
-	res, just, err := p.dkg.ProcessResponses(resps)
-	if err != nil || res != nil {
-		p.res <- OptionResult{
-			Error:  err,
-			Result: res,
-		}
-		return false
-	}
-	if just != nil {
-		p.Info("sendJustifications", "sending", fmt.Sprintf("from %d responses", len(resps)))
-		p.board.PushJustifications(just)
-	} else {
-		p.Info("sendJustifications", "DKG FINISH", "from response phase")
-	}
-	return true
+	_ = "STUB: not implemented"
+	return false
 }
 
-func (p *Protocol) finish(justifs []*JustificationBundle) {
-	res, err := p.dkg.ProcessJustifications(justifs)
-	p.res <- OptionResult{
-		Error:  err,
-		Result: res,
-	}
-}
+func (p *Protocol) finish(justifs []*JustificationBundle) { _ = "STUB: not implemented"; return }
 
-func (p *Protocol) WaitEnd() <-chan OptionResult {
-	return p.res
-}
+func (p *Protocol) WaitEnd() <-chan OptionResult { _ = "STUB: not implemented"; return nil }
 
 type OptionResult struct {
 	Result *Result
@@ -354,73 +122,22 @@ type set struct {
 	bad  []Index
 }
 
-func newSet() *set {
-	return &set{
-		vals: make(map[Index]Packet),
-	}
-}
+func newSet() *set { _ = "STUB: not implemented"; return nil }
 
-func (s *set) Push(p Packet) {
-	hash, _ := p.Hash()
-	idx := p.Index()
-	if s.isBad(idx) {
-		// already misbehaved before
-		return
-	}
-	prev, present := s.vals[idx]
-	if present {
-		prevHash, _ := prev.Hash()
-		if !bytes.Equal(prevHash, hash) {
-			// bad behavior - we evict
-			delete(s.vals, idx)
-			s.bad = append(s.bad, idx)
-		}
-		// same packet just rebroadcasted - all good
-		return
-	}
-	s.vals[idx] = p
-}
+func (s *set) Push(p Packet) { _ = "STUB: not implemented"; return }
 
-func (s *set) isBad(idx Index) bool {
-	return slices.Contains(s.bad, idx)
-}
+// already misbehaved before
 
-func (s *set) ToDeals() []*DealBundle {
-	deals := make([]*DealBundle, 0, len(s.vals))
-	for _, p := range s.vals {
-		pDeal, ok := p.(*DealBundle)
-		if !ok {
-			panic("packet could not be cast to DealBundle")
-		}
-		deals = append(deals, pDeal)
-	}
-	return deals
-}
+// bad behavior - we evict
 
-func (s *set) ToResponses() []*ResponseBundle {
-	resps := make([]*ResponseBundle, 0, len(s.vals))
-	for _, p := range s.vals {
-		pResponse, ok := p.(*ResponseBundle)
-		if !ok {
-			panic("packet could not be cast to ResponseBundle")
-		}
-		resps = append(resps, pResponse)
-	}
-	return resps
-}
+// same packet just rebroadcasted - all good
 
-func (s *set) ToJustifications() []*JustificationBundle {
-	justs := make([]*JustificationBundle, 0, len(s.vals))
-	for _, p := range s.vals {
-		pJustification, ok := p.(*JustificationBundle)
-		if !ok {
-			panic("packet could not be cast to JustificationBundle")
-		}
-		justs = append(justs, pJustification)
-	}
-	return justs
-}
+func (s *set) isBad(idx Index) bool { _ = "STUB: not implemented"; return false }
 
-func (s *set) Len() int {
-	return len(s.vals)
-}
+func (s *set) ToDeals() []*DealBundle { _ = "STUB: not implemented"; return nil }
+
+func (s *set) ToResponses() []*ResponseBundle { _ = "STUB: not implemented"; return nil }
+
+func (s *set) ToJustifications() []*JustificationBundle { _ = "STUB: not implemented"; return nil }
+
+func (s *set) Len() int { _ = "STUB: not implemented"; return 0 }

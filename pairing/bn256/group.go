@@ -6,7 +6,6 @@ import (
 	"crypto/cipher"
 
 	"go.dedis.ch/kyber/v4"
-	"go.dedis.ch/kyber/v4/group/mod"
 )
 
 type groupG1 struct {
@@ -14,67 +13,49 @@ type groupG1 struct {
 	*commonSuite
 }
 
-func (g *groupG1) String() string {
-	return "bn256.G1"
-}
+func (g *groupG1) String() string { _ = "STUB: not implemented"; return "" }
 
-func (g *groupG1) PointLen() int {
-	return newPointG1().MarshalSize()
-}
+func (g *groupG1) PointLen() int { _ = "STUB: not implemented"; return 0 }
 
-func (g *groupG1) Point() kyber.Point {
-	return newPointG1()
-}
+func (g *groupG1) Point() kyber.Point { _ = "STUB: not implemented"; return *new(kyber.Point) }
 
 type groupG2 struct {
 	common
 	*commonSuite
 }
 
-func (g *groupG2) String() string {
-	return "bn256.G2"
-}
+func (g *groupG2) String() string { _ = "STUB: not implemented"; return "" }
 
-func (g *groupG2) PointLen() int {
-	return newPointG2().MarshalSize()
-}
+func (g *groupG2) PointLen() int { _ = "STUB: not implemented"; return 0 }
 
-func (g *groupG2) Point() kyber.Point {
-	return newPointG2()
-}
+func (g *groupG2) Point() kyber.Point { _ = "STUB: not implemented"; return *new(kyber.Point) }
 
 type groupGT struct {
 	common
 	*commonSuite
 }
 
-func (g *groupGT) String() string {
-	return "bn256.GT"
-}
+func (g *groupGT) String() string { _ = "STUB: not implemented"; return "" }
 
-func (g *groupGT) PointLen() int {
-	return newPointGT().MarshalSize()
-}
+func (g *groupGT) PointLen() int { _ = "STUB: not implemented"; return 0 }
 
 func (g *groupGT) Point() kyber.Point {
-	return newPointGT()
+	_ = "STUB: not implemented"
+	return *
+
+	// common functionalities across G1, G2, and GT
+	new(kyber.Point)
 }
 
-// common functionalities across G1, G2, and GT
 type common struct{}
 
-func (c *common) ScalarLen() int {
-	return mod.NewInt64(0, OrderMod).MarshalSize()
-}
+func (c *common) ScalarLen() int { _ = "STUB: not implemented"; return 0 }
 
-func (c *common) Scalar() kyber.Scalar {
-	return mod.NewInt64(0, OrderMod)
-}
+func (c *common) Scalar() kyber.Scalar { _ = "STUB: not implemented"; return *new(kyber.Scalar) }
 
-func (c *common) PrimeOrder() bool {
-	return true
-}
+func (c *common) PrimeOrder() bool { _ = "STUB: not implemented"; return false }
 
 func (c *common) NewKey(rand cipher.Stream) kyber.Scalar {
-	return mod.NewInt64(0, OrderMod).Pick(rand)
+	_ = "STUB: not implemented"
+	return *new(kyber.Scalar)
 }

@@ -3,8 +3,6 @@
 package compatible
 
 import (
-	"crypto/rand"
-	"errors"
 	"io"
 	"math/big"
 
@@ -15,137 +13,78 @@ type Int struct {
 	big.Int
 }
 
-func NewInt(x int64) *Int {
-	return &Int{*big.NewInt(x)}
-}
+func NewInt(x int64) *Int { _ = "STUB: not implemented"; return nil }
 
-func NewUint(x uint64) *Int {
-	return &Int{*new(big.Int).SetUint64(x)}
-}
+func NewUint(x uint64) *Int { _ = "STUB: not implemented"; return nil }
 
-func Jacobi(x, y *Int) int { return big.Jacobi(&x.Int, &y.Int) }
+func Jacobi(x, y *Int) int { _ = "STUB: not implemented"; return 0 }
 
-func Prime(randR io.Reader, bits int) (*Int, error) {
-	random, err := rand.Prime(randR, bits)
-	if err != nil {
-		return nil, err
-	}
-	return &Int{*random}, err
-}
+func Prime(randR io.Reader, bits int) (*Int, error) { _ = "STUB: not implemented"; return nil, nil }
 
-func (z *Int) ToCompatibleMod() *compatiblemod.Mod {
-	return &compatiblemod.Mod{Int: z.Int}
-}
+func (z *Int) ToCompatibleMod() *compatiblemod.Mod { _ = "STUB: not implemented"; return nil }
 
-func FromCompatibleMod(mod *compatiblemod.Mod) *Int {
-	return &Int{Int: mod.Int}
-}
+func FromCompatibleMod(mod *compatiblemod.Mod) *Int { _ = "STUB: not implemented"; return nil }
 
-func FromBigInt(z *big.Int, _ *compatiblemod.Mod) *Int {
-	return &Int{*z}
-}
+func FromBigInt(z *big.Int, _ *compatiblemod.Mod) *Int { _ = "STUB: not implemented"; return nil }
+
 func (z *Int) ToBigInt() *big.Int {
-	return &z.Int
+	_ = "STUB: not implemented"
+
+	// SetString sets this receiver to s. Return this receiver
+	// and a boolean indicating success
+	return nil
 }
 
-// SetString sets this receiver to s. Return this receiver
-// and a boolean indicating success
 func (z *Int) SetString(s, _ string, base int) (*Int, bool) {
-	_, ok := z.Int.SetString(s, base)
-	return z, ok
+	_ = "STUB: not implemented"
+	return nil, false
 }
 
 // SetStringM sets this receiver to s mod m. Returns this receiver
 // and a boolean indicating success.
 func (z *Int) SetStringM(s string, m *compatiblemod.Mod, base int) (*Int, bool) {
-	_, ok := z.Int.SetString(s, base)
-	if !ok {
-		return nil, false
-	}
-	z.Int.Mod(&z.Int, &m.Int)
-	return z, true
+	_ = "STUB: not implemented"
+	return nil, false
 }
 
-func (z *Int) Mul(a, b *Int, mod *compatiblemod.Mod) *Int {
-	z.Int.Mul(&a.Int, &b.Int)
-	z.Int.Mod(&z.Int, &mod.Int)
-	return z
-}
+func (z *Int) Mul(a, b *Int, mod *compatiblemod.Mod) *Int { _ = "STUB: not implemented"; return nil }
 
-func (z *Int) Sub(a, b *Int, mod *compatiblemod.Mod) *Int {
-	z.Int.Sub(&a.Int, &b.Int)
-	z.Int.Mod(&z.Int, &mod.Int)
-	return z
-}
+func (z *Int) Sub(a, b *Int, mod *compatiblemod.Mod) *Int { _ = "STUB: not implemented"; return nil }
 
-func (z *Int) Add(a, b *Int, mod *compatiblemod.Mod) *Int {
-	z.Int.Add(&a.Int, &b.Int)
-	z.Int.Mod(&z.Int, &mod.Int)
-	return z
-}
+func (z *Int) Add(a, b *Int, mod *compatiblemod.Mod) *Int { _ = "STUB: not implemented"; return nil }
 
-func (z *Int) SetUint64(x uint64) *Int {
-	z.Int.SetUint64(x)
-	return z
-}
+func (z *Int) SetUint64(x uint64) *Int { _ = "STUB: not implemented"; return nil }
 
 // Mod computes x mod y, sets the receiver to this result and return
 // the receiver
-func (z *Int) Mod(x *Int, y *compatiblemod.Mod) *Int {
-	z.Int.Mod(&x.Int, &y.Int)
-	return z
-}
+func (z *Int) Mod(x *Int, y *compatiblemod.Mod) *Int { _ = "STUB: not implemented"; return nil }
 
 // SetBytesMod sets the byte of this Int and then mods the result to the
 // given modulus. Ensures that the resulting Int is less than the given
 // modulus.
 func (z *Int) SetBytesMod(buf []byte, mod *compatiblemod.Mod) *Int {
-	z.SetBytes(buf)
-	z.Int.Mod(&z.Int, &mod.Int)
-	return z
+	_ = "STUB: not implemented"
+	return nil
 }
 
 func (z *Int) SetBytesWithCheck(buf []byte, mod *compatiblemod.Mod) (*Int, error) {
-	z.SetBytes(buf)
-	if mod.Cmp(&z.Int) <= 0 {
-		return z, errors.New("setting bytes overflows the modulus")
-	}
-	return z, nil
+	_ = "STUB: not implemented"
+	return nil, nil
 }
 
-func (z *Int) Cmp(y *Int) (r int) {
-	return z.Int.Cmp(&y.Int)
-}
+func (z *Int) Cmp(y *Int) (r int) { _ = "STUB: not implemented"; return 0 }
 
-func (z *Int) Exp(x, y *Int, m *compatiblemod.Mod) *Int {
-	z.Int.Exp(&x.Int, &y.Int, &m.Int)
-	return z
-}
-func (z *Int) ModInverse(g *Int, n *compatiblemod.Mod) *Int {
-	z.Int.ModInverse(&g.Int, &n.Int)
-	return z
-}
+func (z *Int) Exp(x, y *Int, m *compatiblemod.Mod) *Int { _ = "STUB: not implemented"; return nil }
 
-func (z *Int) SetInt64(x int64) *Int {
-	z.Int.SetInt64(x)
-	return z
-}
+func (z *Int) ModInverse(g *Int, n *compatiblemod.Mod) *Int { _ = "STUB: not implemented"; return nil }
 
-func (z *Int) Set(x *Int) *Int {
-	z.Int.Set(&x.Int)
-	return z
-}
+func (z *Int) SetInt64(x int64) *Int { _ = "STUB: not implemented"; return nil }
 
-func (z *Int) SetBit(x *Int, i int, b uint) *Int {
-	z.Int.SetBit(&x.Int, i, b)
-	return z
-}
+func (z *Int) Set(x *Int) *Int { _ = "STUB: not implemented"; return nil }
 
-func (z *Int) Bytes(_ *compatiblemod.Mod) []byte {
-	return z.Int.Bytes()
-}
+func (z *Int) SetBit(x *Int, i int, b uint) *Int { _ = "STUB: not implemented"; return nil }
+
+func (z *Int) Bytes(_ *compatiblemod.Mod) []byte { _ = "STUB: not implemented"; return nil }
 
 // CmpGeqMod returns true if z >= mod otherwise 0
-func (z *Int) CmpGeqMod(mod *compatiblemod.Mod) bool {
-	return z.Int.Cmp(&mod.Int) >= 0
-}
+func (z *Int) CmpGeqMod(mod *compatiblemod.Mod) bool { _ = "STUB: not implemented"; return false }

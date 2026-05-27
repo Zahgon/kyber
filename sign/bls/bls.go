@@ -14,8 +14,6 @@ package bls
 
 import (
 	"crypto/cipher"
-	"errors"
-	"fmt"
 
 	"go.dedis.ch/kyber/v4"
 	"go.dedis.ch/kyber/v4/pairing"
@@ -31,66 +29,28 @@ type scheme struct {
 // NewSchemeOnG1 returns a sign.Scheme that uses G1 for its signature space and G2
 // for its public keys
 func NewSchemeOnG1(suite pairing.Suite) sign.Scheme {
-	sigGroup := suite.G1()
-	keyGroup := suite.G2()
-	pairing := func(public, hashedMsg, sigPoint kyber.Point) bool {
-		return suite.ValidatePairing(hashedMsg, public, sigPoint, keyGroup.Point().Base())
-	}
-	return &scheme{
-		sigGroup: sigGroup,
-		keyGroup: keyGroup,
-		pairing:  pairing,
-	}
+	_ = "STUB: not implemented"
+	return *new(sign.Scheme)
 }
 
 // NewSchemeOnG2 returns a sign.Scheme that uses G2 for its signature space and
 // G1 for its public key
 func NewSchemeOnG2(suite pairing.Suite) sign.Scheme {
-	sigGroup := suite.G2()
-	keyGroup := suite.G1()
-	pairing := func(public, hashedMsg, sigPoint kyber.Point) bool {
-		return suite.ValidatePairing(public, hashedMsg, keyGroup.Point().Base(), sigPoint)
-	}
-	return &scheme{
-		sigGroup: sigGroup,
-		keyGroup: keyGroup,
-		pairing:  pairing,
-	}
+	_ = "STUB: not implemented"
+	return *new(sign.Scheme)
 }
 
 func (s *scheme) NewKeyPair(random cipher.Stream) (kyber.Scalar, kyber.Point) {
-	secret := s.keyGroup.Scalar().Pick(random)
-	public := s.keyGroup.Point().Mul(secret, nil)
-	return secret, public
+	_ = "STUB: not implemented"
+	return *new(kyber.Scalar), *new(kyber.Point)
 }
 
 func (s *scheme) Sign(private kyber.Scalar, msg []byte) ([]byte, error) {
-	hashable, ok := s.sigGroup.Point().(kyber.HashablePoint)
-	if !ok {
-		return nil, errors.New("point needs to implement hashablePoint")
-	}
-	HM := hashable.Hash(msg)
-	xHM := HM.Mul(private, HM)
-
-	sig, err := xHM.MarshalBinary()
-	if err != nil {
-		return nil, err
-	}
-	return sig, nil
+	_ = "STUB: not implemented"
+	return nil, nil
 }
 
 func (s *scheme) Verify(X kyber.Point, msg, sig []byte) error {
-	hashable, ok := s.sigGroup.Point().(kyber.HashablePoint)
-	if !ok {
-		return errors.New("bls: point needs to implement hashablePoint")
-	}
-	HM := hashable.Hash(msg)
-	sigPoint := s.sigGroup.Point()
-	if err := sigPoint.UnmarshalBinary(sig); err != nil {
-		return fmt.Errorf("bls: unmarshalling signature point: %w", err)
-	}
-	if !s.pairing(X, HM, sigPoint) {
-		return errors.New("bls: invalid signature")
-	}
+	_ = "STUB: not implemented"
 	return nil
 }

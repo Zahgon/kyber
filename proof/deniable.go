@@ -2,8 +2,6 @@ package proof
 
 import (
 	"bytes"
-	"errors"
-	"fmt"
 
 	"go.dedis.ch/kyber/v4"
 )
@@ -16,11 +14,8 @@ import (
 // and may even consist of different numbers of steps.
 func DeniableProver(suite Suite, self int, prover Prover,
 	verifiers []Verifier) Protocol {
-
-	return func(ctx Context) []error {
-		dp := deniableProver{}
-		return dp.run(suite, self, prover, verifiers, ctx)
-	}
+	_ = "STUB: not implemented"
+	return *new(Protocol)
 }
 
 type deniableProver struct {
@@ -45,209 +40,99 @@ type deniableProver struct {
 
 func (dp *deniableProver) run(suite Suite, self int, prv Prover,
 	vrf []Verifier, sc Context) []error {
-	dp.suite = suite
-	dp.self = self
-	dp.sc = sc
-	dp.prirand = sc.Random()
-
-	nnodes := len(vrf)
-	if self < 0 || self >= nnodes {
-		return []error{errors.New("out-of-range self node")}
-	}
-
-	// Initialize error slice entries to a default error indicator,
-	// so that forgetting to run a verifier won't look like "success"
-	verr := errors.New("prover or verifier not run")
-	dp.err = make([]error, nnodes)
-	for i := range dp.err {
-		if i != self {
-			dp.err[i] = verr
-		}
-	}
-
-	// Launch goroutines to run whichever verifiers the caller requested
-	dp.dv = make([]*deniableVerifier, nnodes)
-	for i := range vrf {
-		if vrf[i] != nil {
-			dv := deniableVerifier{}
-			dv.start(suite, vrf[i])
-			dp.dv[i] = &dv
-		}
-	}
-
-	// Run the prover, which will also drive the verifiers.
-	err := dp.initStep()
-	if err != nil {
-		dp.err[self] = err
-		return dp.err
-	}
-
-	if err := (func(ProverContext) error)(prv)(dp); err != nil {
-		dp.err[self] = err
-	}
-
-	// Send the last prover message.
-	// Make sure the verifiers get to run to completion as well
-	for {
-		stragglers, err := dp.proofStep()
-		if err != nil {
-			dp.err[self] = err
-			break
-		}
-		if !stragglers {
-			break
-		}
-		if err = dp.challengeStep(); err != nil {
-			dp.err[self] = err
-			break
-		}
-	}
-
-	return dp.err
+	_ = "STUB: not implemented"
+	return nil
 }
+
+// Initialize error slice entries to a default error indicator,
+// so that forgetting to run a verifier won't look like "success"
+
+// Launch goroutines to run whichever verifiers the caller requested
+
+// Run the prover, which will also drive the verifiers.
+
+// Send the last prover message.
+// Make sure the verifiers get to run to completion as well
 
 // keySize is arbitrary, make it long enough to seed the XOF
 const keySize = 128
 
 // Start the message buffer off in each step with a randomness commitment
-func (dp *deniableProver) initStep() error {
-	key := make([]byte, keySize) // secret random key
-	_, err := dp.prirand.Read(key)
-	if err != nil {
-		return err
-	}
-	dp.key = key
+func (dp *deniableProver) initStep() error { _ = "STUB: not implemented"; return nil }
 
-	msg := make([]byte, keySize) // send commitment to it
-	xof := dp.suite.XOF(key)
-	_, err = xof.Read(msg)
-	if err != nil {
-		return err
-	}
-	dp.msg = bytes.NewBuffer(msg)
+// secret random key
 
-	// The Sigma-Prover will now append its proof content to dp.msg...
-	return nil
-}
+// send commitment to it
+
+// The Sigma-Prover will now append its proof content to dp.msg...
 
 func (dp *deniableProver) proofStep() (bool, error) {
+	_ = "STUB: not implemented"
 
 	// Send the randomness commit and accumulated message to the leader,
 	// and get all participants' commits, via our star-protocol context.
-	msgs, err := dp.sc.Step(dp.msg.Bytes())
-	if err != nil {
-		return false, err
-	}
-	if !bytes.Equal(msgs[dp.self], dp.msg.Bytes()) {
-		return false, errors.New("own messages were corrupted")
-	}
-	dp.msgs = msgs
-
-	// Distribute this step's prover messages
-	// to the relevant verifiers as well,
-	// waking them up in the process so they can proceed.
-	for i := range dp.dv {
-		dv := dp.dv[i]
-		if dv != nil && i < len(msgs) {
-			dv.inbox <- msgs[i][keySize:] // send to verifier
-		}
-	}
-
-	// Collect the verifiers' responses,
-	// collecting error indicators from verifiers that are done.
-	stragglers := false
-	for i := range dp.dv { // collect verifier responses
-		dv := dp.dv[i]
-		if dv != nil {
-			done := <-dv.done // get verifier response
-			if done {         // verifier is done
-				dp.err[i] = dv.err
-				dp.dv[i] = nil
-			} else { // verifier needs next challenge
-				stragglers = true
-			}
-		}
-	}
-	return stragglers, nil
+	return false, nil
 }
+
+// Distribute this step's prover messages
+// to the relevant verifiers as well,
+// waking them up in the process so they can proceed.
+
+// send to verifier
+
+// Collect the verifiers' responses,
+// collecting error indicators from verifiers that are done.
+
+// collect verifier responses
+
+// get verifier response
+// verifier is done
+
+// verifier needs next challenge
 
 func (dp *deniableProver) challengeStep() error {
+	_ = "STUB: not implemented"
 
 	// Send our challenge randomness to the leader, and collect all.
-	keys, err := dp.sc.Step(dp.key)
-	if err != nil {
-		return err
-	}
-
-	// XOR together all the participants' randomness contributions,
-	// check them against the respective commits,
-	// and ensure ours is included to ensure deniability
-	// (even if all others turn out to be maliciously generated).
-	mix := make([]byte, keySize)
-	for i := range keys {
-		com := dp.msgs[i][:keySize] // node i's randomness commitment
-		key := keys[i]              // node i's committed random key
-		if len(com) < keySize || len(key) < keySize {
-			continue // ignore participants who dropped out
-		}
-		chk := make([]byte, keySize)
-		_, err := dp.suite.XOF(key).Read(chk)
-		if err != nil {
-			return err
-		}
-
-		if !bytes.Equal(com, chk) {
-			return errors.New("wrong key for commit")
-		}
-		for j := range keySize { // mix in this key
-			mix[j] ^= key[j]
-		}
-	}
-	if len(keys) <= dp.self || !bytes.Equal(keys[dp.self], dp.key) {
-		return errors.New("our own message was corrupted")
-	}
-
-	// Use the mix to produce the public randomness needed by the prover
-	dp.pubrand = dp.suite.XOF(mix)
-
-	// Distribute the master challenge to any verifiers waiting for it
-	for i := range dp.dv {
-		dv := dp.dv[i]
-		if dv != nil {
-			dv.inbox <- mix // so send it
-		}
-	}
-
-	// Setup for the next proof step
-	err = dp.initStep()
-	return err
+	return nil
 }
 
+// XOR together all the participants' randomness contributions,
+// check them against the respective commits,
+// and ensure ours is included to ensure deniability
+// (even if all others turn out to be maliciously generated).
+
+// node i's randomness commitment
+// node i's committed random key
+
+// ignore participants who dropped out
+
+// mix in this key
+
+// Use the mix to produce the public randomness needed by the prover
+
+// Distribute the master challenge to any verifiers waiting for it
+
+// so send it
+
+// Setup for the next proof step
+
 func (dp *deniableProver) Put(message any) error {
+	_ = "STUB: not implemented"
 	// Add onto accumulated prover message
-	return dp.suite.Write(dp.msg, message)
+	return nil
 }
 
 // Prover will call this after Put()ing all commits for a given step,
 // to get the master challenge to be used in its challenge/responses.
-func (dp *deniableProver) PubRand(data ...any) error {
+func (dp *deniableProver) PubRand(data ...any) error { _ = "STUB: not implemented"; return nil }
 
-	if _, err := dp.proofStep(); err != nil { // finish proof step
-		return err
-	}
-	if err := dp.challengeStep(); err != nil { // run challenge step
-		return err
-	}
-	return dp.suite.Read(dp.pubrand, data...)
-}
+// finish proof step
+
+// run challenge step
 
 // Get private randomness
-func (dp *deniableProver) PriRand(data ...any) error {
-	if err := dp.suite.Read(dp.prirand, data...); err != nil {
-		return fmt.Errorf("error reading random stream: %v", err.Error())
-	}
-	return nil
-}
+func (dp *deniableProver) PriRand(data ...any) error { _ = "STUB: not implemented"; return nil }
 
 // Interactive Sigma-protocol verifier context.
 // Acts as a slave to a deniableProver instance.
@@ -263,51 +148,35 @@ type deniableVerifier struct {
 	pubrand kyber.XOF
 }
 
-func (dv *deniableVerifier) start(suite Suite, vrf Verifier) {
-	dv.suite = suite
-	dv.inbox = make(chan []byte)
-	dv.done = make(chan bool)
+func (dv *deniableVerifier) start(suite Suite, vrf Verifier) { _ = "STUB: not implemented"; return }
 
-	// Launch a concurrent goroutine to run this verifier
-	go func() {
-		// Await the prover's first message
-		dv.getProof()
+// Launch a concurrent goroutine to run this verifier
 
-		// Run the verifier, providing dv as its context
-		dv.err = (func(VerifierContext) error)(vrf)(dv)
+// Await the prover's first message
 
-		// Signal verifier termination
-		dv.done <- true
-	}()
-}
+// Run the verifier, providing dv as its context
+
+// Signal verifier termination
 
 func (dv *deniableVerifier) getProof() {
+	_ = "STUB: not implemented"
 	// Get the next message from the prover
-	prbuf := <-dv.inbox
-	dv.prbuf = bytes.NewBuffer(prbuf)
+	return
 }
 
 // Read structured data from the proof
-func (dv *deniableVerifier) Get(message any) error {
-	return dv.suite.Read(dv.prbuf, message)
-}
+func (dv *deniableVerifier) Get(message any) error { _ = "STUB: not implemented"; return nil }
 
 // Get the next public random challenge.
 func (dv *deniableVerifier) PubRand(data ...any) error {
+	_ = "STUB: not implemented"
 
 	// Signal that we need the next challenge
-	dv.done <- false
-
-	// Wait for it
-	chal := <-dv.inbox
-
-	// Produce the appropriate publicly random stream
-	dv.pubrand = dv.suite.XOF(chal)
-	if err := dv.suite.Read(dv.pubrand, data...); err != nil {
-		return err
-	}
-
-	// Get the next proof message
-	dv.getProof()
 	return nil
 }
+
+// Wait for it
+
+// Produce the appropriate publicly random stream
+
+// Get the next proof message

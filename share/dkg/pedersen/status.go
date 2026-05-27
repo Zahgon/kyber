@@ -1,13 +1,5 @@
 package dkg
 
-import (
-	"bufio"
-	"fmt"
-	"io"
-	"slices"
-	"strings"
-)
-
 type Status int32
 
 const (
@@ -19,108 +11,43 @@ type BitSet map[uint32]Status
 type StatusMatrix map[uint32]BitSet
 
 func NewStatusMatrix(dealers []Node, shareHolders []Node, status Status) *StatusMatrix {
-	statuses := make(map[uint32]BitSet)
-	for _, dealer := range dealers {
-		bitset := make(map[uint32]Status)
-		for _, holder := range shareHolders {
-			bitset[holder.Index] = status
-		}
-		statuses[dealer.Index] = bitset
-	}
-	sm := StatusMatrix(statuses)
-	return &sm
+	_ = "STUB: not implemented"
+	return nil
 }
 
 func (s *StatusMatrix) StatusesForShare(shareIndex uint32) BitSet {
-	bt := make(BitSet)
-	for dealerIdx, bs := range *s {
-		status, ok := bs[shareIndex]
-		if !ok {
-			panic("index out of range - not supposed to happen")
-		}
-		bt[dealerIdx] = status
-	}
-	return bt
+	_ = "STUB: not implemented"
+	return *new(BitSet)
 }
 
 func (s *StatusMatrix) StatusesOfDealer(dealerIndex uint32) BitSet {
-	return (*s)[dealerIndex]
+	_ = "STUB: not implemented"
+	return *
+
+	// can panic if indexes are not from the original list of nodes
+	new(BitSet)
 }
 
-// can panic if indexes are not from the original list of nodes
-func (s *StatusMatrix) Set(dealer, share uint32, status Status) {
-	(*s)[dealer][share] = status
-}
+func (s *StatusMatrix) Set(dealer, share uint32, status Status) { _ = "STUB: not implemented"; return }
 
-func (s *StatusMatrix) SetAll(dealer uint32, status Status) {
-	for share := range (*s)[dealer] {
-		(*s)[dealer][share] = status
-	}
-}
+func (s *StatusMatrix) SetAll(dealer uint32, status Status) { _ = "STUB: not implemented"; return }
 
-func (s *StatusMatrix) AllTrue(dealer uint32) bool {
-	for _, status := range (*s)[dealer] {
-		if status == Complaint {
-			return false
-		}
-	}
-	return true
-}
+func (s *StatusMatrix) AllTrue(dealer uint32) bool { _ = "STUB: not implemented"; return false }
 
-func (s *StatusMatrix) CompleteSuccess() bool {
-	for dealer := range *s {
-		if !s.AllTrue(dealer) {
-			return false
-		}
-	}
-	return true
-}
+func (s *StatusMatrix) CompleteSuccess() bool { _ = "STUB: not implemented"; return false }
 
 // can panic if indexes are not from the original list of nodes
 func (s *StatusMatrix) Get(dealer, share uint32) Status {
-	return (*s)[dealer][share]
+	_ = "STUB: not implemented"
+	return *new(Status)
 }
 
 func (s *StatusMatrix) String() string {
+	_ = "STUB: not implemented"
 	// get dealer indexes
-	dealerIdx := make([]uint32, 0, len(*s))
-	for didx := range *s {
-		dealerIdx = append(dealerIdx, didx)
-	}
-	// get shareholder indexes
-	sharesIdx := make([]uint32, 0, len((*s)[dealerIdx[0]]))
-	for shareIdx := range (*s)[dealerIdx[0]] {
-		sharesIdx = append(sharesIdx, shareIdx)
-	}
-
-	slices.Sort(dealerIdx)
-	slices.Sort(sharesIdx)
-
-	var b strings.Builder
-	var cw io.Writer = bufio.NewWriter(&b)
-	for _, dealerIndex := range dealerIdx {
-		var statuses []string
-		for _, shareIndex := range sharesIdx {
-			status := (*s)[dealerIndex][shareIndex]
-			var st string
-			if status == Success {
-				fmt.Fprintf(cw, " %d: ok", shareIndex)
-			} else {
-				fmt.Fprintf(cw, " %d: no", shareIndex)
-			}
-			statuses = append(statuses, st)
-		}
-		fmt.Fprintf(cw, "dealer %d: [ %s ]\n", dealerIndex, strings.Join(statuses, ","))
-	}
-	return b.String()
+	return ""
 }
 
-func (b BitSet) LengthComplaints() uint32 {
-	var count = uint32(0)
-	for _, status := range b {
-		if status == Complaint {
-			count++
-		}
-	}
-	return count
-}
+// get shareholder indexes
+
+func (b BitSet) LengthComplaints() uint32 { _ = "STUB: not implemented"; return 0 }

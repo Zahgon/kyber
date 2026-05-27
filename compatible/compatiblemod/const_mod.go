@@ -3,7 +3,6 @@
 package compatiblemod
 
 import (
-	"encoding/binary"
 	"math/big"
 
 	"go.dedis.ch/kyber/v4/compatible/bigmod"
@@ -13,97 +12,36 @@ type Mod struct {
 	bigmod.Modulus
 }
 
-func (m *Mod) Nat() *bigmod.Nat {
-	return m.Modulus.Nat()
-}
+func (m *Mod) Nat() *bigmod.Nat { _ = "STUB: not implemented"; return nil }
 
 // SetString sets this receiver to the value of s in the given
 // base. This methods leaks the size of s.
 func (m *Mod) SetString(s string, base int) (*Mod, bool) {
-	bigFromS, ok := new(big.Int).SetString(s, base)
-	if !ok {
-		return nil, false
-	}
-	m = FromBigInt(bigFromS)
-	return m, true
+	_ = "STUB: not implemented"
+	return nil, false
 }
 
-func FromString(s string, base int) (*Mod, bool) {
-	bigFromS, ok := new(big.Int).SetString(s, base)
-	if !ok {
-		return nil, false
-	}
-	z := FromBigInt(bigFromS)
-	return z, true
-}
+func FromString(s string, base int) (*Mod, bool) { _ = "STUB: not implemented"; return nil, false }
 
-func (m *Mod) SetBytes(b []byte) *Mod {
-	modulus, err := bigmod.NewModulus(b)
-	if err != nil {
-		panic(err)
-	}
-	return &Mod{*modulus}
-}
+func (m *Mod) SetBytes(b []byte) *Mod { _ = "STUB: not implemented"; return nil }
 
 // one usage in group/edwards22519/point_test.go @ TestPointIsCanonical
-func (m *Mod) Bytes() []byte {
-	return m.Modulus.Nat().Bytes(&m.Modulus)
-}
+func (m *Mod) Bytes() []byte { _ = "STUB: not implemented"; return nil }
 
-func NewInt(x int64) *Mod {
-	if x < 1 {
-		panic("negative number")
-	}
-	xBytes := make([]byte, 8)
-	binary.BigEndian.PutUint64(xBytes, uint64(x))
-	mod, err := bigmod.NewModulus(xBytes)
-	if err != nil {
-		panic(err)
-	}
-	return &Mod{*mod}
-}
+func NewInt(x int64) *Mod { _ = "STUB: not implemented"; return nil }
 
-func NewUint(x uint64) *Mod {
-	if x <= 1 {
-		panic("Modulus needs to be larger than 1")
-	}
-	xBytes := make([]byte, 8)
-	binary.BigEndian.PutUint64(xBytes, uint64(x))
-	mod, err := bigmod.NewModulus(xBytes)
-	if err != nil {
-		panic(err)
-	}
-	return &Mod{*mod}
-}
+func NewUint(x uint64) *Mod { _ = "STUB: not implemented"; return nil }
 
 // NewModulusProduct creates a new modulus as the result of
 // the multiplication of the two input byte arrays
-func NewModulusProduct(a, b []byte) *Mod {
-	mod, err := bigmod.NewModulusProduct(a, b)
-	if err != nil {
-		panic(err)
-	}
-	return &Mod{*mod}
-}
+func NewModulusProduct(a, b []byte) *Mod { _ = "STUB: not implemented"; return nil }
 
-func FromBigInt(x *big.Int) *Mod {
-	modulus, err := bigmod.NewModulus(x.Bytes())
-	if err != nil {
-		panic(err)
-	}
-	return &Mod{*modulus}
-}
+func FromBigInt(x *big.Int) *Mod { _ = "STUB: not implemented"; return nil }
 
-func (m *Mod) ToBigInt() *big.Int {
-	return big.NewInt(0).SetBytes(m.Bytes())
-}
+func (m *Mod) ToBigInt() *big.Int { _ = "STUB: not implemented"; return nil }
 
-func (m *Mod) SetBigInt(big *big.Int) *Mod {
-	return m.SetBytes(big.Bytes())
-}
+func (m *Mod) SetBigInt(big *big.Int) *Mod { _ = "STUB: not implemented"; return nil }
 
-func (m *Mod) Bit(i int) uint {
-	return m.Modulus.Nat().Bit(i)
-}
+func (m *Mod) Bit(i int) uint { _ = "STUB: not implemented"; return 0 }
 
-func (m *Mod) String() string { return m.ToBigInt().String() }
+func (m *Mod) String() string { _ = "STUB: not implemented"; return "" }

@@ -14,7 +14,6 @@ package pvss
 
 import (
 	"errors"
-	"fmt"
 
 	"go.dedis.ch/kyber/v4"
 	"go.dedis.ch/kyber/v4/proof/dleq"
@@ -55,110 +54,41 @@ func EncShares(
 	secret kyber.Scalar,
 	t uint32,
 ) (shares []*PubVerShare, commit *share.PubPoly, err error) {
-	n := uint32(len(X))
-	encShares := make([]*PubVerShare, n)
-
-	// Create secret sharing polynomial
-	priPoly := share.NewPriPoly(suite, t, secret, suite.RandomStream())
-
-	// Create secret set of shares
-	priShares := priPoly.Shares(n)
-
-	// Create public polynomial commitments with respect to basis H
-	pubPoly := priPoly.Commit(H)
-
-	// Prepare data for encryption consistency proofs ...
-	indices := make([]uint32, n)
-	values := make([]kyber.Scalar, n)
-	HS := make([]kyber.Point, n)
-	for i := range n {
-		indices[i] = priShares[i].I
-		values[i] = priShares[i].V
-		HS[i] = H
-	}
-
-	// Create NIZK discrete-logarithm equality proofs
-	proofs, _, sX, err := dleq.NewDLEQProofBatch(suite, HS, X, values)
-	if err != nil {
-		return nil, nil, err
-	}
-
-	for i := range n {
-		ps := &share.PubShare{I: indices[i], V: sX[i]}
-		encShares[i] = &PubVerShare{*ps, *proofs[i]}
-	}
-
-	return encShares, pubPoly, nil
+	_ = "STUB: not implemented"
+	return nil, nil, nil
 }
+
+// Create secret sharing polynomial
+
+// Create secret set of shares
+
+// Create public polynomial commitments with respect to basis H
+
+// Prepare data for encryption consistency proofs ...
+
+// Create NIZK discrete-logarithm equality proofs
 
 func computeCommitments(suite Suite, n uint32, polyComs []kyber.Point) []kyber.Point {
-	coms := make([]kyber.Point, n)
-
-	// Compute Xi = C0 + iC1 + (i^2)C2 + ... + (i^(t-1))C_(t-1) for i in [1, ..., n]
-	// Using Horner's method: Xi = C0 + i(C1 + i(C2 + i(....)))
-	for i := range n {
-		ith := suite.Scalar().SetInt64(int64(i) + 1)
-		acc := suite.Point().Null()
-
-		// From j=t-1 to j = 1 since last C0 is not multiplied by ith
-		for j := len(polyComs) - 1; j > 0; j-- {
-			acc.Add(acc, polyComs[j])
-			acc.Mul(ith, acc)
-		}
-
-		acc.Add(acc, polyComs[0])
-		coms[i] = acc
-	}
-
-	return coms
+	_ = "STUB: not implemented"
+	return nil
 }
+
+// Compute Xi = C0 + iC1 + (i^2)C2 + ... + (i^(t-1))C_(t-1) for i in [1, ..., n]
+// Using Horner's method: Xi = C0 + i(C1 + i(C2 + i(....)))
+
+// From j=t-1 to j = 1 since last C0 is not multiplied by ith
 
 func computeGlobalChallenge(suite Suite, n uint32, commit *share.PubPoly,
 	encShares []*PubVerShare) (kyber.Scalar, error) {
-	_, polyComs := commit.Info()
-	coms := computeCommitments(suite, n, polyComs)
-
-	h := suite.Hash()
-	var err error
-	for _, com := range coms {
-		if _, err = com.MarshalTo(h); err != nil {
-			return nil, err
-		}
-	}
-
-	for _, encShare := range encShares {
-		if _, err = encShare.S.V.MarshalTo(h); err != nil {
-			return nil, err
-		}
-	}
-
-	for _, encShare := range encShares {
-		if _, err = encShare.P.VG.MarshalTo(h); err != nil {
-			return nil, err
-		}
-	}
-
-	for _, encShare := range encShares {
-		if _, err = encShare.P.VH.MarshalTo(h); err != nil {
-			return nil, err
-		}
-	}
-
-	cb := h.Sum(nil)
-	return suite.Scalar().Pick(suite.XOF(cb)), nil
+	_ = "STUB: not implemented"
+	return *new(kyber.Scalar), nil
 }
 
 // VerifyEncShare checks that the encrypted share sX satisfies
 // log_{H}(sH) == log_{X}(sX) where sH is the public commitment computed by
 // evaluating the public commitment polynomial at the encrypted share's index i.
 func VerifyEncShare(suite Suite, H, X, sH kyber.Point, expGlobalChallenge kyber.Scalar, encShare *PubVerShare) error {
-	if !encShare.P.C.Equal(expGlobalChallenge) {
-		return fmt.Errorf("didn't verify: %w", ErrGlobalChallengeVerification)
-	}
-
-	if err := encShare.P.Verify(suite, H, X, sH, encShare.S.V); err != nil {
-		return fmt.Errorf("didn't verify: %w", ErrEncVerification)
-	}
+	_ = "STUB: not implemented"
 	return nil
 }
 
@@ -172,26 +102,14 @@ func VerifyEncShareBatch(
 	commit *share.PubPoly,
 	encShares []*PubVerShare,
 ) ([]kyber.Point, []*PubVerShare, error) {
-	if len(X) != len(sH) || len(sH) != len(encShares) {
-		return nil, nil, fmt.Errorf("didn't verify: %w", ErrDifferentLengths)
-	}
-	var K []kyber.Point  // good public keys
-	var E []*PubVerShare // good encrypted shares
-
-	// Need to compute the global challenge and verify the encrypted shares
-	expGlobalChallenge, err := computeGlobalChallenge(suite, uint32(len(X)), commit, encShares)
-	if err != nil {
-		return nil, nil, err
-	}
-
-	for i := range X {
-		if err := VerifyEncShare(suite, H, X[i], sH[i], expGlobalChallenge, encShares[i]); err == nil {
-			K = append(K, X[i])
-			E = append(E, encShares[i])
-		}
-	}
-	return K, E, nil
+	_ = "STUB: not implemented"
+	return nil, nil, nil
 }
+
+// good public keys
+// good encrypted shares
+
+// Need to compute the global challenge and verify the encrypted shares
 
 // DecShare first verifies the encrypted share against the encryption
 // consistency proof and, if valid, decrypts it and creates a decryption
@@ -202,19 +120,11 @@ func DecShare(
 	x, expGlobalChallenge kyber.Scalar,
 	encShare *PubVerShare,
 ) (*PubVerShare, error) {
-	if err := VerifyEncShare(suite, H, X, sH, expGlobalChallenge, encShare); err != nil {
-		return nil, err
-	}
-
-	G := suite.Point().Base()
-	V := suite.Point().Mul(suite.Scalar().Inv(x), encShare.S.V) // decryption: x^{-1} * (xS)
-	ps := &share.PubShare{I: encShare.S.I, V: V}
-	P, _, _, err := dleq.NewDLEQProof(suite, G, V, x)
-	if err != nil {
-		return nil, err
-	}
-	return &PubVerShare{*ps, *P}, nil
+	_ = "STUB: not implemented"
+	return nil, nil
 }
+
+// decryption: x^{-1} * (xS)
 
 // DecShareBatch provides the same functionality as DecShare but for slices of
 // encrypted shares. The function returns the valid encrypted and decrypted
@@ -227,52 +137,19 @@ func DecShareBatch(
 	expGlobalChallenges []kyber.Scalar,
 	encShares []*PubVerShare,
 ) ([]kyber.Point, []*PubVerShare, []*PubVerShare, error) {
-	if len(X) != len(sH) || len(sH) != len(encShares) {
-		return nil, nil, nil, fmt.Errorf("didn't verify: %w", ErrDifferentLengths)
-	}
-	var K []kyber.Point  // good public keys
-	var E []*PubVerShare // good encrypted shares
-	var D []*PubVerShare // good decrypted shares
-	for i := range encShares {
-		if ds, err := DecShare(suite, H, X[i], sH[i], x, expGlobalChallenges[i], encShares[i]); err == nil {
-			K = append(K, X[i])
-			E = append(E, encShares[i])
-			D = append(D, ds)
-		}
-	}
-	return K, E, D, nil
+	_ = "STUB: not implemented"
+	return nil, nil, nil, nil
 }
+
+// good public keys
+// good encrypted shares
+// good decrypted shares
 
 // VerifyDecShare checks that the decrypted share sG satisfies
 // log_{G}(X) == log_{sG}(sX). Note that X = xG and sX = s(xG) = x(sG).
 func VerifyDecShare(suite Suite, G, X kyber.Point, encShare *PubVerShare, decShare *PubVerShare) error {
+	_ = "STUB: not implemented"
 	// Compute challenge for the decShare
-	h := suite.Hash()
-	var err error
-	if _, err = X.MarshalTo(h); err != nil {
-		return err
-	}
-	if _, err = encShare.S.V.MarshalTo(h); err != nil {
-		return err
-	}
-	if _, err = decShare.P.VG.MarshalTo(h); err != nil {
-		return err
-	}
-	if _, err = decShare.P.VH.MarshalTo(h); err != nil {
-		return err
-	}
-
-	cb := h.Sum(nil)
-	expDecChallenge := suite.Scalar().Pick(suite.XOF(cb))
-
-	if !decShare.P.C.Equal(expDecChallenge) {
-		return fmt.Errorf("didn't verify: %w", ErrDecShareChallengeVerification)
-	}
-
-	if err := decShare.P.Verify(suite, G, decShare.S.V, X, encShare.S.V); err != nil {
-		return fmt.Errorf("didn't verify: %w", ErrDecVerification)
-	}
-
 	return nil
 }
 
@@ -285,18 +162,11 @@ func VerifyDecShareBatch(
 	encShares []*PubVerShare,
 	decShares []*PubVerShare,
 ) ([]*PubVerShare, error) {
-	if len(X) != len(encShares) || len(encShares) != len(decShares) {
-		return nil, fmt.Errorf("didn't verify: %w", ErrDifferentLengths)
-	}
-
-	var D []*PubVerShare // good decrypted shares
-	for i := range X {
-		if err := VerifyDecShare(suite, G, X[i], encShares[i], decShares[i]); err == nil {
-			D = append(D, decShares[i])
-		}
-	}
-	return D, nil
+	_ = "STUB: not implemented"
+	return nil, nil
 }
+
+// good decrypted shares
 
 // RecoverSecret first verifies the given decrypted shares against their
 // decryption consistency proofs and then tries to recover the shared secret.
@@ -308,16 +178,6 @@ func RecoverSecret(
 	decShares []*PubVerShare,
 	t, n uint32,
 ) (kyber.Point, error) {
-	D, err := VerifyDecShareBatch(suite, G, X, encShares, decShares)
-	if err != nil {
-		return nil, err
-	}
-	if uint32(len(D)) < t {
-		return nil, fmt.Errorf("didn't verify: %w", ErrTooFewShares)
-	}
-	var shares []*share.PubShare
-	for _, s := range D {
-		shares = append(shares, &s.S)
-	}
-	return share.RecoverCommit(suite, shares, t, n)
+	_ = "STUB: not implemented"
+	return *new(kyber.Point), nil
 }

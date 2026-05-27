@@ -20,34 +20,30 @@ type SuiteBn256 struct {
 var _ kyber.Group = (*SuiteBn256)(nil)
 
 // NewSuiteBn256 makes a new BN256 suite
-func NewSuiteBn256() *SuiteBn256 {
-	return &SuiteBn256{
-		Suite: NewSuite(),
-	}
-}
+func NewSuiteBn256() *SuiteBn256 { _ = "STUB: not implemented"; return nil }
 
 // Point generates a point from the G2 group that can only be used
 // for public keys
 func (s *SuiteBn256) Point() kyber.Point {
-	return s.G2().Point()
+	_ = "STUB: not implemented"
+	return *
+
+	// PointLen returns the length of a G2 point
+	new(kyber.Point)
 }
 
-// PointLen returns the length of a G2 point
-func (s *SuiteBn256) PointLen() int {
-	return s.G2().PointLen()
-}
+func (s *SuiteBn256) PointLen() int { _ = "STUB: not implemented"; return 0 }
 
 // Scalar generates a scalar
 func (s *SuiteBn256) Scalar() kyber.Scalar {
-	return s.G1().Scalar()
+	_ = "STUB: not implemented"
+	return *
+
+	// ScalarLen returns the lentgh of a scalar
+	new(kyber.Scalar)
 }
 
-// ScalarLen returns the lentgh of a scalar
-func (s *SuiteBn256) ScalarLen() int {
-	return s.G1().ScalarLen()
-}
+func (s *SuiteBn256) ScalarLen() int { _ = "STUB: not implemented"; return 0 }
 
 // String returns the name of the suite
-func (s *SuiteBn256) String() string {
-	return "bn256.adapter"
-}
+func (s *SuiteBn256) String() string { _ = "STUB: not implemented"; return "" }

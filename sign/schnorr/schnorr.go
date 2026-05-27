@@ -12,11 +12,7 @@ using the edwards25519 group, and by extension the CoSi verification algorithm.
 package schnorr
 
 import (
-	"bytes"
 	"crypto/cipher"
-	"crypto/sha512"
-	"errors"
-	"fmt"
 
 	"go.dedis.ch/kyber/v4"
 	"go.dedis.ch/kyber/v4/sign"
@@ -32,54 +28,39 @@ type Scheme struct {
 	s Suite
 }
 
-func NewScheme(s Suite) sign.Scheme {
-	return &Scheme{s}
-}
+func NewScheme(s Suite) sign.Scheme { _ = "STUB: not implemented"; return *new(sign.Scheme) }
 
 func (s *Scheme) NewKeyPair(random cipher.Stream) (kyber.Scalar, kyber.Point) {
-	priv := s.s.Scalar().Pick(random)
-	pub := s.s.Point().Mul(priv, nil)
-	return priv, pub
+	_ = "STUB: not implemented"
+	return *new(kyber.Scalar), *new(kyber.Point)
 }
 
 func (s *Scheme) Sign(private kyber.Scalar, msg []byte) ([]byte, error) {
-	return Sign(s.s, private, msg)
+	_ = "STUB: not implemented"
+	return nil, nil
 }
 
 func (s *Scheme) Verify(public kyber.Point, msg, sig []byte) error {
-	return Verify(s.s, public, msg, sig)
+	_ = "STUB: not implemented"
+	return nil
 }
 
 // Sign creates a Sign signature from a msg and a private key. This
 // signature can be verified with VerifySchnorr. It's also a valid EdDSA
 // signature when using the edwards25519 Group.
 func Sign(s Suite, private kyber.Scalar, msg []byte) ([]byte, error) {
-	var g kyber.Group = s
-	// create random secret k and public point commitment R
-	k := g.Scalar().Pick(s.RandomStream())
-	R := g.Point().Mul(k, nil)
+	_ = "STUB: not implemented"
+	return nil,
 
-	// create hash(public || R || message)
-	public := g.Point().Mul(private, nil)
-	h, err := hash(g, public, R, msg)
-	if err != nil {
-		return nil, err
-	}
-
-	// compute response s = k + x*h
-	xh := g.Scalar().Mul(private, h)
-	S := g.Scalar().Add(k, xh)
-
-	// return R || s
-	var b bytes.Buffer
-	if _, err := R.MarshalTo(&b); err != nil {
-		return nil, err
-	}
-	if _, err := S.MarshalTo(&b); err != nil {
-		return nil, err
-	}
-	return b.Bytes(), nil
+		// create random secret k and public point commitment R
+		nil
 }
+
+// create hash(public || R || message)
+
+// compute response s = k + x*h
+
+// return R || s
 
 // VerifyWithChecks uses a public key buffer, a message and a signature.
 // It will return nil if sig is a valid signature for msg created by
@@ -87,97 +68,24 @@ func Sign(s Suite, private kyber.Scalar, msg []byte) ([]byte, error) {
 // additional checks around the canonicality and ensures the public key
 // does not have a small order when using `edwards25519` group.
 func VerifyWithChecks(g kyber.Group, pub, msg, sig []byte) error {
-	type scalarCanCheckCanonical interface {
-		IsCanonical(b []byte) bool
-	}
-
-	type pointCanCheckCanonicalAndSmallOrder interface {
-		HasSmallOrder() bool
-		IsCanonical(b []byte) bool
-	}
-
-	R := g.Point()
-	s := g.Scalar()
-	pointSize := R.MarshalSize()
-	scalarSize := s.MarshalSize()
-	sigSize := scalarSize + pointSize
-	if len(sig) != sigSize {
-		return fmt.Errorf("schnorr: signature of invalid length %d instead of %d", len(sig), sigSize)
-	}
-	if err := R.UnmarshalBinary(sig[:pointSize]); err != nil {
-		return err
-	}
-	if p, ok := R.(pointCanCheckCanonicalAndSmallOrder); ok {
-		if !p.IsCanonical(sig[:pointSize]) {
-			return errors.New("point R is not canonical")
-		}
-		if p.HasSmallOrder() {
-			return errors.New("point R has small order")
-		}
-	}
-	if s, ok := g.Scalar().(scalarCanCheckCanonical); ok && !s.IsCanonical(sig[pointSize:]) {
-		return errors.New("signature is not canonical")
-	}
-	if sub, ok := R.(kyber.SubGroupElement); ok && !sub.IsInCorrectGroup() {
-		return errors.New("schnorr: point not in correct group")
-	}
-	if err := s.UnmarshalBinary(sig[pointSize:]); err != nil {
-		return err
-	}
-
-	public := g.Point()
-	err := public.UnmarshalBinary(pub)
-	if err != nil {
-		return errors.New("schnorr: error unmarshalling public key")
-	}
-	if p, ok := public.(pointCanCheckCanonicalAndSmallOrder); ok {
-		if !p.IsCanonical(pub) {
-			return errors.New("public key is not canonical")
-		}
-		if p.HasSmallOrder() {
-			return errors.New("public key has small order")
-		}
-	}
-	// recompute hash(public || R || msg)
-	h, err := hash(g, public, R, msg)
-	if err != nil {
-		return err
-	}
-
-	// compute S = g^s
-	S := g.Point().Mul(s, nil)
-	// compute RAh = R + A^h
-	Ah := g.Point().Mul(h, public)
-	RAs := g.Point().Add(R, Ah)
-
-	if !S.Equal(RAs) {
-		return errors.New("schnorr: invalid signature")
-	}
-
+	_ = "STUB: not implemented"
 	return nil
-
 }
+
+// recompute hash(public || R || msg)
+
+// compute S = g^s
+
+// compute RAh = R + A^h
 
 // Verify verifies a given Schnorr signature. It returns nil iff the
 // given signature is valid.
 func Verify(g kyber.Group, public kyber.Point, msg, sig []byte) error {
-	PBuf, err := public.MarshalBinary()
-	if err != nil {
-		return fmt.Errorf("error unmarshalling public key: %w", err)
-	}
-	return VerifyWithChecks(g, PBuf, msg, sig)
+	_ = "STUB: not implemented"
+	return nil
 }
 
 func hash(g kyber.Group, public, r kyber.Point, msg []byte) (kyber.Scalar, error) {
-	h := sha512.New()
-	if _, err := r.MarshalTo(h); err != nil {
-		return nil, err
-	}
-	if _, err := public.MarshalTo(h); err != nil {
-		return nil, err
-	}
-	if _, err := h.Write(msg); err != nil {
-		return nil, err
-	}
-	return g.Scalar().SetBytes(h.Sum(nil)), nil
+	_ = "STUB: not implemented"
+	return *new(kyber.Scalar), nil
 }

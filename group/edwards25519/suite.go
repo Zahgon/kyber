@@ -2,16 +2,11 @@ package edwards25519
 
 import (
 	"crypto/cipher"
-	"crypto/sha256"
 	"hash"
 	"io"
 	"reflect"
 
-	"go.dedis.ch/fixbuf"
 	"go.dedis.ch/kyber/v4"
-	"go.dedis.ch/kyber/v4/group/internal/marshalling"
-	"go.dedis.ch/kyber/v4/util/random"
-	"go.dedis.ch/kyber/v4/xof/blake2xb"
 )
 
 // SuiteEd25519 implements some basic functionalities such as Group, HashFactory,
@@ -24,49 +19,38 @@ type SuiteEd25519 struct {
 
 // Hash returns a newly instanciated sha256 hash function.
 func (s *SuiteEd25519) Hash() hash.Hash {
-	return sha256.New()
+	_ = "STUB: not implemented"
+	return *
+
+	// XOF returns an XOF which is implemented via the Blake2b hash.
+	new(hash.Hash)
 }
 
-// XOF returns an XOF which is implemented via the Blake2b hash.
-func (s *SuiteEd25519) XOF(key []byte) kyber.XOF {
-	return blake2xb.New(key)
-}
+func (s *SuiteEd25519) XOF(key []byte) kyber.XOF { _ = "STUB: not implemented"; return *new(kyber.XOF) }
 
-func (s *SuiteEd25519) Read(r io.Reader, objs ...any) error {
-	return fixbuf.Read(r, s, objs...)
-}
+func (s *SuiteEd25519) Read(r io.Reader, objs ...any) error { _ = "STUB: not implemented"; return nil }
 
-func (s *SuiteEd25519) Write(w io.Writer, objs ...any) error {
-	return fixbuf.Write(w, objs...)
-}
+func (s *SuiteEd25519) Write(w io.Writer, objs ...any) error { _ = "STUB: not implemented"; return nil }
 
 // New implements the kyber.Encoding interface
-func (s *SuiteEd25519) New(t reflect.Type) any {
-	return marshalling.GroupNew(s, t)
-}
+func (s *SuiteEd25519) New(t reflect.Type) any { _ = "STUB: not implemented"; return *new(any) }
 
 // RandomStream returns a cipher.Stream that returns a key stream
 // from crypto/rand.
 func (s *SuiteEd25519) RandomStream() cipher.Stream {
-	if s.r != nil {
-		return s.r
-	}
-	return random.New()
+	_ = "STUB: not implemented"
+	return *new(cipher.Stream)
 }
 
 // NewBlakeSHA256Ed25519 returns a cipher suite based on package
 // go.dedis.ch/kyber/v4/xof/blake2xb, SHA-256, and the Ed25519 curve.
 // It produces cryptographically random numbers via package crypto/rand.
-func NewBlakeSHA256Ed25519() *SuiteEd25519 {
-	suite := new(SuiteEd25519)
-	return suite
-}
+func NewBlakeSHA256Ed25519() *SuiteEd25519 { _ = "STUB: not implemented"; return nil }
 
 // NewBlakeSHA256Ed25519WithRand returns a cipher suite based on package
 // go.dedis.ch/kyber/v4/xof/blake2xb, SHA-256, and the Ed25519 curve.
 // It produces cryptographically random numbers via the provided stream r.
 func NewBlakeSHA256Ed25519WithRand(r cipher.Stream) *SuiteEd25519 {
-	suite := new(SuiteEd25519)
-	suite.r = r
-	return suite
+	_ = "STUB: not implemented"
+	return nil
 }

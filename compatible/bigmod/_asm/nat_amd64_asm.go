@@ -5,8 +5,6 @@
 package main
 
 import (
-	"strconv"
-
 	. "github.com/mmcloughlin/avo/build"
 	. "github.com/mmcloughlin/avo/operand"
 	. "github.com/mmcloughlin/avo/reg"
@@ -25,89 +23,31 @@ func main() {
 	Generate()
 }
 
-func addMulVVW(bits int) {
-	if bits%64 != 0 {
-		panic("bit size unsupported")
-	}
+func addMulVVW(bits int) { _ = "STUB: not implemented"; return }
 
-	Implement("addMulVVW" + strconv.Itoa(bits))
+// zero out carry
 
-	CMPB(Mem{Symbol: Symbol{Name: "·supportADX"}, Base: StaticBase}, Imm(1))
-	JEQ(LabelRef("adx"))
+// implicit MULQ inputs and outputs
 
-	z := Mem{Base: Load(Param("z"), GP64())}
-	x := Mem{Base: Load(Param("x"), GP64())}
-	y := Load(Param("y"), GP64())
+// The ADX strategy implements the following function, where c1 and c2 are
+// the overflow and the carry flag respectively.
+//
+//    func addMulVVW(z, x []uint, y uint) (carry uint) {
+//        var c1, c2 uint
+//        for i := range z {
+//            hi, lo := bits.Mul(x[i], y)
+//            lo, c1 = bits.Add(lo, z[i], c1)
+//            z[i], c2 = bits.Add(lo, carry, c2)
+//            carry = hi
+//        }
+//        return carry + c1 + c2
+//    }
+//
+// The loop is fully unrolled and the hi / carry registers are alternated
+// instead of introducing a MOV.
 
-	carry := GP64()
-	XORQ(carry, carry) // zero out carry
+// implicit source of MULXQ
 
-	for i := 0; i < bits/64; i++ {
-		Comment("Iteration " + strconv.Itoa(i))
-		hi, lo := RDX, RAX // implicit MULQ inputs and outputs
-		MOVQ(x.Offset(i*8), lo)
-		MULQ(y)
-		ADDQ(z.Offset(i*8), lo)
-		ADCQ(Imm(0), hi)
-		ADDQ(carry, lo)
-		ADCQ(Imm(0), hi)
-		MOVQ(hi, carry)
-		MOVQ(lo, z.Offset(i*8))
-	}
+// zero out carry
 
-	Store(carry, ReturnIndex(0))
-	RET()
-
-	Label("adx")
-
-	// The ADX strategy implements the following function, where c1 and c2 are
-	// the overflow and the carry flag respectively.
-	//
-	//    func addMulVVW(z, x []uint, y uint) (carry uint) {
-	//        var c1, c2 uint
-	//        for i := range z {
-	//            hi, lo := bits.Mul(x[i], y)
-	//            lo, c1 = bits.Add(lo, z[i], c1)
-	//            z[i], c2 = bits.Add(lo, carry, c2)
-	//            carry = hi
-	//        }
-	//        return carry + c1 + c2
-	//    }
-	//
-	// The loop is fully unrolled and the hi / carry registers are alternated
-	// instead of introducing a MOV.
-
-	z = Mem{Base: Load(Param("z"), GP64())}
-	x = Mem{Base: Load(Param("x"), GP64())}
-	Load(Param("y"), RDX) // implicit source of MULXQ
-
-	carry = GP64()
-	XORQ(carry, carry) // zero out carry
-	z0 := GP64()
-	XORQ(z0, z0) // unset flags and zero out z0
-
-	for i := 0; i < bits/64; i++ {
-		hi, lo := GP64(), GP64()
-
-		Comment("Iteration " + strconv.Itoa(i))
-		MULXQ(x.Offset(i*8), lo, hi)
-		ADCXQ(carry, lo)
-		ADOXQ(z.Offset(i*8), lo)
-		MOVQ(lo, z.Offset(i*8))
-
-		i++
-
-		Comment("Iteration " + strconv.Itoa(i))
-		MULXQ(x.Offset(i*8), lo, carry)
-		ADCXQ(hi, lo)
-		ADOXQ(z.Offset(i*8), lo)
-		MOVQ(lo, z.Offset(i*8))
-	}
-
-	Comment("Add back carry flags and return")
-	ADCXQ(z0, carry)
-	ADOXQ(z0, carry)
-
-	Store(carry, ReturnIndex(0))
-	RET()
-}
+// unset flags and zero out z0

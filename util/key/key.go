@@ -27,23 +27,11 @@ type Pair struct {
 }
 
 // NewKeyPair directly creates a secret/public key pair
-func NewKeyPair(suite Suite) *Pair {
-	kp := new(Pair)
-	kp.Gen(suite)
-	return kp
-}
+func NewKeyPair(suite Suite) *Pair { _ = "STUB: not implemented"; return nil }
 
 // Gen creates a fresh public/private keypair with the given
 // ciphersuite, using a given source of cryptographic randomness. If
 // suite implements key.Generator, then suite.NewKey is called
 // to generate the private key, otherwise the normal technique
 // of choosing a random scalar from the group is used.
-func (p *Pair) Gen(suite Suite) {
-	random := suite.RandomStream()
-	if g, ok := suite.(Generator); ok {
-		p.Private = g.NewKey(random)
-	} else {
-		p.Private = suite.Scalar().Pick(random)
-	}
-	p.Public = suite.Point().Mul(p.Private, nil)
-}
+func (p *Pair) Gen(suite Suite) { _ = "STUB: not implemented"; return }

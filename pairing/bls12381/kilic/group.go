@@ -4,12 +4,9 @@ package kilic
 
 import (
 	"crypto/cipher"
-	"crypto/sha256"
 	"hash"
 
 	"go.dedis.ch/kyber/v4"
-	"go.dedis.ch/kyber/v4/util/random"
-	"go.dedis.ch/kyber/v4/xof/blake2xb"
 )
 
 type groupBls struct {
@@ -18,65 +15,42 @@ type groupBls struct {
 	isPrime  bool
 }
 
-func (g *groupBls) String() string {
-	return g.str
-}
+func (g *groupBls) String() string { _ = "STUB: not implemented"; return "" }
 
-func (g *groupBls) Scalar() kyber.Scalar {
-	return NewScalar()
-}
+func (g *groupBls) Scalar() kyber.Scalar { _ = "STUB: not implemented"; return *new(kyber.Scalar) }
 
-func (g *groupBls) ScalarLen() int {
-	return g.Scalar().MarshalSize()
-}
+func (g *groupBls) ScalarLen() int { _ = "STUB: not implemented"; return 0 }
 
-func (g *groupBls) PointLen() int {
-	return g.Point().MarshalSize()
-}
+func (g *groupBls) PointLen() int { _ = "STUB: not implemented"; return 0 }
 
-func (g *groupBls) Point() kyber.Point {
-	return g.newPoint()
-}
+func (g *groupBls) Point() kyber.Point { _ = "STUB: not implemented"; return *new(kyber.Point) }
 
-func (g *groupBls) IsPrimeOrder() bool {
-	return g.isPrime
-}
+func (g *groupBls) IsPrimeOrder() bool { _ = "STUB: not implemented"; return false }
 
 func (g *groupBls) Hash() hash.Hash {
-	return sha256.New()
+	_ = "STUB: not implemented"
+	return *
+
+	// XOF returns a newly instantiated blake2xb XOF function.
+	new(hash.Hash)
 }
 
-// XOF returns a newly instantiated blake2xb XOF function.
 func (g *groupBls) XOF(seed []byte) kyber.XOF {
-	return blake2xb.New(seed)
+	_ = "STUB: not implemented"
+	return *
+
+	// RandomStream returns a cipher.Stream which corresponds to a key stream from
+	// crypto/rand.
+	new(kyber.XOF)
 }
 
-// RandomStream returns a cipher.Stream which corresponds to a key stream from
-// crypto/rand.
 func (g *groupBls) RandomStream() cipher.Stream {
-	return random.New()
+	_ = "STUB: not implemented"
+	return *new(cipher.Stream)
 }
 
-func NewGroupG1(dst ...byte) kyber.Group {
-	return &groupBls{
-		str:      "bls12-381.G1",
-		newPoint: func() kyber.Point { return NullG1(dst...) },
-		isPrime:  true,
-	}
-}
+func NewGroupG1(dst ...byte) kyber.Group { _ = "STUB: not implemented"; return *new(kyber.Group) }
 
-func NewGroupG2(dst ...byte) kyber.Group {
-	return &groupBls{
-		str:      "bls12-381.G2",
-		newPoint: func() kyber.Point { return NullG2(dst...) },
-		isPrime:  false,
-	}
-}
+func NewGroupG2(dst ...byte) kyber.Group { _ = "STUB: not implemented"; return *new(kyber.Group) }
 
-func NewGroupGT() kyber.Group {
-	return &groupBls{
-		str:      "bls12-381.GT",
-		newPoint: func() kyber.Point { return newEmptyGT() },
-		isPrime:  false,
-	}
-}
+func NewGroupGT() kyber.Group { _ = "STUB: not implemented"; return *new(kyber.Group) }

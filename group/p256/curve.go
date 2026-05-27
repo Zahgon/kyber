@@ -5,16 +5,10 @@ package p256
 import (
 	"crypto/cipher"
 	"crypto/elliptic"
-	"errors"
-	"fmt"
 	"io"
 	"math/big"
 
 	"go.dedis.ch/kyber/v4"
-	"go.dedis.ch/kyber/v4/compatible/compatiblemod"
-	"go.dedis.ch/kyber/v4/group/internal/marshalling"
-	"go.dedis.ch/kyber/v4/group/mod"
-	"go.dedis.ch/kyber/v4/util/random"
 )
 
 type curvePoint struct {
@@ -22,206 +16,129 @@ type curvePoint struct {
 	c    *curve
 }
 
-func (P *curvePoint) String() string {
-	return "(" + P.x.String() + "," + P.y.String() + ")"
-}
+func (P *curvePoint) String() string { _ = "STUB: not implemented"; return "" }
 
-func (P *curvePoint) Equal(P2 kyber.Point) bool {
-	cp2 := P2.(*curvePoint) //nolint:errcheck // Design pattern to emulate generics
+func (P *curvePoint) Equal(P2 kyber.Point) bool { _ = "STUB: not implemented"; return false }
 
-	// Make sure both coordinates are normalized.
-	// Apparently Go's elliptic curve code doesn't always ensure this.
-	// Use temporary big.Ints to avoid mutating the operands.
-	M := P.c.p.P
-	x1 := new(big.Int).Mod(P.x, M)
-	y1 := new(big.Int).Mod(P.y, M)
-	x2 := new(big.Int).Mod(cp2.x, M)
-	y2 := new(big.Int).Mod(cp2.y, M)
+//nolint:errcheck // Design pattern to emulate generics
 
-	return x1.Cmp(x2) == 0 && y1.Cmp(y2) == 0
-}
+// Make sure both coordinates are normalized.
+// Apparently Go's elliptic curve code doesn't always ensure this.
+// Use temporary big.Ints to avoid mutating the operands.
 
-func (P *curvePoint) Null() kyber.Point {
-	P.x = big.NewInt(0)
-	P.y = big.NewInt(0)
-	return P
-}
+func (P *curvePoint) Null() kyber.Point { _ = "STUB: not implemented"; return *new(kyber.Point) }
 
-func (P *curvePoint) Base() kyber.Point {
-	P.x = new(big.Int).Set(P.c.p.Gx)
-	P.y = new(big.Int).Set(P.c.p.Gy)
-	return P
-}
+func (P *curvePoint) Base() kyber.Point { _ = "STUB: not implemented"; return *new(kyber.Point) }
 
 func (P *curvePoint) Valid() bool {
+	_ = "STUB: not implemented"
 	// The IsOnCurve function in Go's elliptic curve package
 	// doesn't consider the point-at-infinity to be "on the curve"
-	return P.c.IsOnCurve(P.x, P.y) ||
-		(P.x.Sign() == 0 && P.y.Sign() == 0)
+	return false
 }
 
 // Try to generate a point on this curve from a chosen x-coordinate,
 // with a random sign.
 func (P *curvePoint) genPoint(x *big.Int, rand cipher.Stream) bool {
+	_ = "STUB: not implemented"
 	// Compute the corresponding Y coordinate, if any
-	y2 := new(big.Int).Mul(x, x)
-	y2.Mul(y2, x)
-	threeX := new(big.Int).Lsh(x, 1)
-	threeX.Add(threeX, x)
-	y2.Sub(y2, threeX)
-	y2.Add(y2, P.c.p.B)
-	y2.Mod(y2, P.c.p.P)
-	y := P.c.sqrt(y2)
-
-	// Pick a random sign for the y coordinate
-	b := make([]byte, 1)
-	rand.XORKeyStream(b, b)
-	if (b[0] & 0x80) != 0 {
-		y.Sub(P.c.p.P, y)
-	}
-
-	// Check that it's a valid point
-	y2t := new(big.Int).Mul(y, y)
-	y2t.Mod(y2t, P.c.p.P)
-	if y2t.Cmp(y2) != 0 {
-		return false // Doesn't yield a valid point!
-	}
-
-	P.x = x
-	P.y = y
-	return true
+	return false
 }
 
+// Pick a random sign for the y coordinate
+
+// Check that it's a valid point
+
+// Doesn't yield a valid point!
+
 func (P *curvePoint) EmbedLen() int {
+	_ = "STUB: not implemented"
 	// Reserve at least 8 most-significant bits for randomness,
 	// and the least-significant 8 bits for embedded data length.
 	// (Hopefully it's unlikely we'll need >=2048-bit curves soon.)
-	return (P.c.p.P.BitLen() - 8 - 8) / 8
+	return 0
 }
 
 func (P *curvePoint) Pick(rand cipher.Stream) kyber.Point {
-	return P.Embed(nil, rand)
+	_ = "STUB: not implemented"
+	return *new(kyber.Point)
 }
 
 // Embed picks a curve point containing a variable amount of embedded data.
 // Remaining bits comprising the point are chosen randomly.
 func (P *curvePoint) Embed(data []byte, rand cipher.Stream) kyber.Point {
-	l := P.c.coordLen()
-	dl := min(P.EmbedLen(), len(data))
-
-	for {
-		b := random.Bits(uint(P.c.p.P.BitLen()), false, rand)
-		if data != nil {
-			b[l-1] = byte(dl)         // Encode length in low 8 bits
-			copy(b[l-dl-1:l-1], data) // Copy in data to embed
-		}
-		if P.genPoint(new(big.Int).SetBytes(b), rand) {
-			return P
-		}
-	}
+	_ = "STUB: not implemented"
+	return *new(kyber.Point)
 }
+
+// Encode length in low 8 bits
+// Copy in data to embed
 
 // Data extracts embedded data from a curve point
-func (P *curvePoint) Data() ([]byte, error) {
-	b := P.x.Bytes()
-	l := P.c.coordLen()
-	if len(b) < l { // pad leading zero bytes if necessary
-		b = append(make([]byte, l-len(b)), b...)
-	}
-	dl := int(b[l-1])
-	if dl > P.EmbedLen() {
-		return nil, errors.New("invalid embedded data length")
-	}
-	return b[l-dl-1 : l-1], nil
-}
+func (P *curvePoint) Data() ([]byte, error) { _ = "STUB: not implemented"; return nil, nil }
+
+// pad leading zero bytes if necessary
 
 func (P *curvePoint) Add(A, B kyber.Point) kyber.Point {
-	ca := A.(*curvePoint) //nolint:errcheck // Design pattern to emulate generics
-	cb := B.(*curvePoint) //nolint:errcheck // Design pattern to emulate generics
-	P.x, P.y = P.c.Add(ca.x, ca.y, cb.x, cb.y)
-	return P
+	_ = "STUB: not implemented"
+	return *
+	//nolint:errcheck // Design pattern to emulate generics
+	new(kyber.Point)
 }
+
+//nolint:errcheck // Design pattern to emulate generics
 
 func (P *curvePoint) Sub(A, B kyber.Point) kyber.Point {
-	ca := A.(*curvePoint) //nolint:errcheck // Design pattern to emulate generics
-	cb := B.(*curvePoint) //nolint:errcheck // Design pattern to emulate generics
-
-	cbn := P.c.Point().Neg(cb).(*curvePoint) //nolint:errcheck // Design pattern to emulate generics
-	P.x, P.y = P.c.Add(ca.x, ca.y, cbn.x, cbn.y)
-	return P
+	_ = "STUB: not implemented"
+	return *
+	//nolint:errcheck // Design pattern to emulate generics
+	new(kyber.Point)
 }
 
+//nolint:errcheck // Design pattern to emulate generics
+
+//nolint:errcheck // Design pattern to emulate generics
+
 func (P *curvePoint) Neg(A kyber.Point) kyber.Point {
-	s := P.c.Scalar().One()
-	s.Neg(s)
-	negated := P.Mul(s, A)
-	negatedToCurvePoint, ok := negated.(*curvePoint)
-	if !ok {
-		panic(ErrTypeCast)
-	}
-	return negatedToCurvePoint
+	_ = "STUB: not implemented"
+	return *new(kyber.Point)
 }
 
 func (P *curvePoint) Mul(s kyber.Scalar, B kyber.Point) kyber.Point {
-	cs := s.(*mod.Int) //nolint:errcheck // Design pattern to emulate generics
-	if B != nil {
-		cb := B.(*curvePoint) //nolint:errcheck // Design pattern to emulate generics
-		P.x, P.y = P.c.ScalarMult(cb.x, cb.y, cs.V.Bytes(nil))
-	} else {
-		P.x, P.y = P.c.ScalarBaseMult(cs.V.Bytes(nil))
-	}
-	return P
+	_ = "STUB: not implemented"
+	//nolint:errcheck // Design pattern to emulate generics
+	return *new(kyber.Point)
 }
 
-func (P *curvePoint) MarshalSize() int {
-	coordlen := (P.c.Params().BitSize + 7) >> 3
-	return 1 + 2*coordlen // uncompressed ANSI X9.62 representation
-}
+//nolint:errcheck // Design pattern to emulate generics
+
+func (P *curvePoint) MarshalSize() int { _ = "STUB: not implemented"; return 0 }
+
+// uncompressed ANSI X9.62 representation
 
 // MarshalBinary marshall this point into binary format according to
 // SEC 1, Version 2.0, Section 2.3.3
 func (P *curvePoint) MarshalBinary() ([]byte, error) {
+	_ = "STUB: not implemented"
 	// Note: explicit implementation since elliptic.Marshall is deprecated
-	byteLen := (P.c.Params().BitSize + 7) / 8
-
-	ret := make([]byte, 1+2*byteLen)
-	ret[0] = 4 // uncompressed point format
-
-	x := P.x.Bytes()
-	y := P.y.Bytes()
-
-	copy(ret[1+byteLen-len(x):], x)
-	copy(ret[1+2*byteLen-len(y):], y)
-
-	return ret, nil
+	return nil, nil
 }
+
+// uncompressed point format
 
 // UnmarshalBinary unmarshalls the given buffer into the receiver according
 // to SEC 1, Version 2.0, Section 2.3.4
 func (P *curvePoint) UnmarshalBinary(buf []byte) error {
+	_ = "STUB: not implemented"
 	// Note: explicit implementation since elliptic.Unmarshall is deprecated
-	byteLen := (P.c.Params().BitSize + 7) / 8
-	expectedLen := 1 + 2*byteLen
-
-	if len(buf) != expectedLen {
-		return fmt.Errorf("invalid data length: got %d, want %d", len(buf), expectedLen)
-	}
-
-	if buf[0] != 4 {
-		return fmt.Errorf("invalid point format: expected uncompressed (4), got %d", buf[0])
-	}
-
-	P.x = new(big.Int).SetBytes(buf[1 : 1+byteLen])
-	P.y = new(big.Int).SetBytes(buf[1+byteLen : 1+2*byteLen])
 	return nil
 }
 
-func (P *curvePoint) MarshalTo(w io.Writer) (int, error) {
-	return marshalling.PointMarshalTo(P, w)
-}
+func (P *curvePoint) MarshalTo(w io.Writer) (int, error) { _ = "STUB: not implemented"; return 0, nil }
 
 func (P *curvePoint) UnmarshalFrom(r io.Reader) (int, error) {
-	return marshalling.PointUnmarshalFrom(P, r)
+	_ = "STUB: not implemented"
+	return 0, nil
 }
 
 // interface for curve-specifc mathematical functions
@@ -238,54 +155,33 @@ type curve struct {
 }
 
 // Return the number of bytes in the encoding of a Scalar for this curve.
-func (c *curve) ScalarLen() int { return (c.p.N.BitLen() + 7) / 8 }
+func (c *curve) ScalarLen() int { _ = "STUB: not implemented"; return 0 }
 
 // Create a Scalar associated with this curve. The scalars created by
 // this package implement kyber.Scalar's SetBytes method, interpreting
 // the bytes as a big-endian integer, so as to be compatible with the
 // Go standard library's big.Int type.
-func (c *curve) Scalar() kyber.Scalar {
-	return mod.NewInt64(0, compatiblemod.FromBigInt(c.p.N))
-}
+func (c *curve) Scalar() kyber.Scalar { _ = "STUB: not implemented"; return *new(kyber.Scalar) }
 
 // Number of bytes required to store one coordinate on this curve
-func (c *curve) coordLen() int {
-	return (c.p.BitSize + 7) / 8
-}
+func (c *curve) coordLen() int { _ = "STUB: not implemented"; return 0 }
 
 // Return the number of bytes in the encoding of a Point for this curve.
 // Currently uses uncompressed ANSI X9.62 format with both X and Y coordinates;
 // this could change.
-func (c *curve) PointLen() int {
-	return 1 + 2*c.coordLen() // ANSI X9.62: 1 header byte plus 2 coords
-}
+func (c *curve) PointLen() int { _ = "STUB: not implemented"; return 0 }
+
+// ANSI X9.62: 1 header byte plus 2 coords
 
 // Create a Point associated with this curve.
-func (c *curve) Point() kyber.Point {
-	p := new(curvePoint)
-	p.c = c
-	return p
-}
+func (c *curve) Point() kyber.Point { _ = "STUB: not implemented"; return *new(kyber.Point) }
 
 func (P *curvePoint) Set(A kyber.Point) kyber.Point {
-	aCurvePoint, ok := A.(*curvePoint)
-	if !ok {
-		panic(ErrTypeCast)
-	}
-	P.x = new(big.Int).Set(aCurvePoint.x)
-	P.y = new(big.Int).Set(aCurvePoint.y)
-	return P
+	_ = "STUB: not implemented"
+	return *new(kyber.Point)
 }
 
-func (P *curvePoint) Clone() kyber.Point {
-	return &curvePoint{
-		x: new(big.Int).Set(P.x),
-		y: new(big.Int).Set(P.y),
-		c: P.c,
-	}
-}
+func (P *curvePoint) Clone() kyber.Point { _ = "STUB: not implemented"; return *new(kyber.Point) }
 
 // Return the order of this curve: the prime N in the curve parameters.
-func (c *curve) Order() *big.Int {
-	return c.p.N
-}
+func (c *curve) Order() *big.Int { _ = "STUB: not implemented"; return nil }

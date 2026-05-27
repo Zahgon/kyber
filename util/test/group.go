@@ -2,7 +2,6 @@ package test
 
 import (
 	"go.dedis.ch/kyber/v4"
-	"go.dedis.ch/kyber/v4/util/random"
 )
 
 // GroupBench is a generic benchmark suite for kyber.groups.
@@ -17,134 +16,55 @@ type GroupBench struct {
 }
 
 // NewGroupBench returns a new GroupBench.
-func NewGroupBench(g kyber.Group) *GroupBench {
-	var gb GroupBench
-	rng := random.New()
-	gb.g = g
-	gb.x = g.Scalar().Pick(rng)
-	gb.y = g.Scalar().Pick(rng)
-	gb.xe, _ = gb.x.MarshalBinary()
-	gb.X = g.Point().Pick(rng)
-	gb.Y = g.Point().Pick(rng)
-	gb.Xe, _ = gb.X.MarshalBinary()
-	return &gb
-}
+func NewGroupBench(g kyber.Group) *GroupBench { _ = "STUB: not implemented"; return nil }
 
 // ScalarAdd benchmarks the addition operation for scalars
-func (gb GroupBench) ScalarAdd(iters int) {
-	for i := 1; i < iters; i++ {
-		gb.x.Add(gb.x, gb.y)
-	}
-}
+func (gb GroupBench) ScalarAdd(iters int) { _ = "STUB: not implemented"; return }
 
 // ScalarSub benchmarks the subtraction operation for scalars
-func (gb GroupBench) ScalarSub(iters int) {
-	for i := 1; i < iters; i++ {
-		gb.x.Sub(gb.x, gb.y)
-	}
-}
+func (gb GroupBench) ScalarSub(iters int) { _ = "STUB: not implemented"; return }
 
 // ScalarNeg benchmarks the negation operation for scalars
-func (gb GroupBench) ScalarNeg(iters int) {
-	for i := 1; i < iters; i++ {
-		gb.x.Neg(gb.x)
-	}
-}
+func (gb GroupBench) ScalarNeg(iters int) { _ = "STUB: not implemented"; return }
 
 // ScalarMul benchmarks the multiplication operation for scalars
-func (gb GroupBench) ScalarMul(iters int) {
-	for i := 1; i < iters; i++ {
-		gb.x.Mul(gb.x, gb.y)
-	}
-}
+func (gb GroupBench) ScalarMul(iters int) { _ = "STUB: not implemented"; return }
 
 // ScalarDiv benchmarks the division operation for scalars
-func (gb GroupBench) ScalarDiv(iters int) {
-	for i := 1; i < iters; i++ {
-		gb.x.Div(gb.x, gb.y)
-	}
-}
+func (gb GroupBench) ScalarDiv(iters int) { _ = "STUB: not implemented"; return }
 
 // ScalarInv benchmarks the inverse operation for scalars
-func (gb GroupBench) ScalarInv(iters int) {
-	for i := 1; i < iters; i++ {
-		gb.x.Inv(gb.x)
-	}
-}
+func (gb GroupBench) ScalarInv(iters int) { _ = "STUB: not implemented"; return }
 
 // ScalarPick benchmarks the Pick operation for scalars
-func (gb GroupBench) ScalarPick(iters int) {
-	for i := 1; i < iters; i++ {
-		gb.x.Pick(random.New())
-	}
-}
+func (gb GroupBench) ScalarPick(iters int) { _ = "STUB: not implemented"; return }
 
 // ScalarEncode benchmarks the marshalling operation for scalars
-func (gb GroupBench) ScalarEncode(iters int) {
-	for i := 1; i < iters; i++ {
-		_, _ = gb.x.MarshalBinary()
-	}
-}
+func (gb GroupBench) ScalarEncode(iters int) { _ = "STUB: not implemented"; return }
 
 // ScalarDecode benchmarks the unmarshalling operation for scalars
-func (gb GroupBench) ScalarDecode(iters int) {
-	for i := 1; i < iters; i++ {
-		_ = gb.x.UnmarshalBinary(gb.xe)
-	}
-}
+func (gb GroupBench) ScalarDecode(iters int) { _ = "STUB: not implemented"; return }
 
 // PointAdd benchmarks the addition operation for points
-func (gb GroupBench) PointAdd(iters int) {
-	for i := 1; i < iters; i++ {
-		gb.X.Add(gb.X, gb.Y)
-	}
-}
+func (gb GroupBench) PointAdd(iters int) { _ = "STUB: not implemented"; return }
 
 // PointSub benchmarks the subtraction operation for points
-func (gb GroupBench) PointSub(iters int) {
-	for i := 1; i < iters; i++ {
-		gb.X.Sub(gb.X, gb.Y)
-	}
-}
+func (gb GroupBench) PointSub(iters int) { _ = "STUB: not implemented"; return }
 
 // PointNeg benchmarks the negation operation for points
-func (gb GroupBench) PointNeg(iters int) {
-	for i := 1; i < iters; i++ {
-		gb.X.Neg(gb.X)
-	}
-}
+func (gb GroupBench) PointNeg(iters int) { _ = "STUB: not implemented"; return }
 
 // PointMul benchmarks the multiplication operation for points
-func (gb GroupBench) PointMul(iters int) {
-	for i := 1; i < iters; i++ {
-		gb.X.Mul(gb.y, gb.X)
-	}
-}
+func (gb GroupBench) PointMul(iters int) { _ = "STUB: not implemented"; return }
 
 // PointBaseMul benchmarks the base multiplication operation for points
-func (gb GroupBench) PointBaseMul(iters int) {
-	for i := 1; i < iters; i++ {
-		gb.X.Mul(gb.y, nil)
-	}
-}
+func (gb GroupBench) PointBaseMul(iters int) { _ = "STUB: not implemented"; return }
 
 // PointPick benchmarks the pick-ing operation for points
-func (gb GroupBench) PointPick(iters int) {
-	for i := 1; i < iters; i++ {
-		gb.X.Pick(random.New())
-	}
-}
+func (gb GroupBench) PointPick(iters int) { _ = "STUB: not implemented"; return }
 
 // PointEncode benchmarks the encoding operation for points
-func (gb GroupBench) PointEncode(iters int) {
-	for i := 1; i < iters; i++ {
-		_, _ = gb.X.MarshalBinary()
-	}
-}
+func (gb GroupBench) PointEncode(iters int) { _ = "STUB: not implemented"; return }
 
 // PointDecode benchmarks the decoding operation for points
-func (gb GroupBench) PointDecode(iters int) {
-	for i := 1; i < iters; i++ {
-		_ = gb.X.UnmarshalBinary(gb.Xe)
-	}
-}
+func (gb GroupBench) PointDecode(iters int) { _ = "STUB: not implemented"; return }

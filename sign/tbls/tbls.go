@@ -11,15 +11,10 @@
 package tbls
 
 import (
-	"bytes"
-	"encoding/binary"
-	"errors"
-
 	"go.dedis.ch/kyber/v4"
 	"go.dedis.ch/kyber/v4/pairing"
 	"go.dedis.ch/kyber/v4/share"
 	"go.dedis.ch/kyber/v4/sign"
-	"go.dedis.ch/kyber/v4/sign/bls"
 )
 
 // SigShare encodes a threshold BLS signature share Si = i || v where the 2-byte
@@ -28,20 +23,10 @@ import (
 type SigShare []byte
 
 // Index returns the index i of the TBLS share Si.
-func (s SigShare) Index() (int, error) {
-	var index uint16
-	buf := bytes.NewReader(s)
-	err := binary.Read(buf, binary.BigEndian, &index)
-	if err != nil {
-		return -1, err
-	}
-	return int(index), nil
-}
+func (s SigShare) Index() (int, error) { _ = "STUB: not implemented"; return 0, nil }
 
 // Value returns the value v of the TBLS share Si.
-func (s *SigShare) Value() []byte {
-	return []byte(*s)[2:]
-}
+func (s *SigShare) Value() []byte { _ = "STUB: not implemented"; return nil }
 
 type scheme struct {
 	keyGroup kyber.Group
@@ -52,62 +37,38 @@ type scheme struct {
 // NewThresholdSchemeOnG1 returns a treshold scheme that computes bls signatures
 // on G1
 func NewThresholdSchemeOnG1(suite pairing.Suite) sign.ThresholdScheme {
-	return &scheme{
-		keyGroup: suite.G2(),
-		sigGroup: suite.G1(),
-		Scheme:   bls.NewSchemeOnG1(suite),
-	}
+	_ = "STUB: not implemented"
+	return *new(sign.ThresholdScheme)
 }
 
 // NewThresholdSchemeOnG2 returns a treshold scheme that computes bls signatures
 // on G2
 func NewThresholdSchemeOnG2(suite pairing.Suite) sign.ThresholdScheme {
-	return &scheme{
-		keyGroup: suite.G1(),
-		sigGroup: suite.G2(),
-		Scheme:   bls.NewSchemeOnG2(suite),
-	}
+	_ = "STUB: not implemented"
+	return *new(sign.ThresholdScheme)
 }
 
 // Sign creates a threshold BLS signature Si = xi * H(m) on the given message m
 // using the provided secret key share xi.
 func (s *scheme) Sign(private *share.PriShare, msg []byte) ([]byte, error) {
-	buf := new(bytes.Buffer)
-	if err := binary.Write(buf, binary.BigEndian, uint16(private.I)); err != nil {
-		return nil, err
-	}
-	sig, err := s.Scheme.Sign(private.V, msg)
-	if err != nil {
-		return nil, err
-	}
-	if err := binary.Write(buf, binary.BigEndian, sig); err != nil {
-		return nil, err
-	}
-	return buf.Bytes(), nil
+	_ = "STUB: not implemented"
+	return nil, nil
 }
 
-func (s *scheme) IndexOf(signature []byte) (int, error) {
-	if len(signature) != s.sigGroup.PointLen()+2 {
-		return -1, errors.New("invalid partial signature length")
-	}
-	return SigShare(signature).Index()
-}
+func (s *scheme) IndexOf(signature []byte) (int, error) { _ = "STUB: not implemented"; return 0, nil }
 
 // VerifyPartial checks the given threshold BLS signature Si on the message m using
 // the public key share Xi that is associated to the secret key share xi. This
 // public key share Xi can be computed by evaluating the public sharing
 // polynonmial at the share's index i.
 func (s *scheme) VerifyPartial(public *share.PubPoly, msg, sig []byte) error {
-	sh := SigShare(sig)
-	i, err := sh.Index()
-	if err != nil {
-		return err
-	}
-	return s.Verify(public.Eval(uint32(i)).V, msg, sh.Value())
+	_ = "STUB: not implemented"
+	return nil
 }
 
 func (s *scheme) VerifyRecovered(public kyber.Point, msg, sig []byte) error {
-	return s.Verify(public, msg, sig)
+	_ = "STUB: not implemented"
+	return nil
 }
 
 // Recover reconstructs the full BLS signature S = x * H(m) from a threshold t
@@ -116,36 +77,6 @@ func (s *scheme) VerifyRecovered(public kyber.Point, msg, sig []byte) error {
 // shared public key X. The shared public key can be computed by evaluating the
 // public sharing polynomial at index 0.
 func (s *scheme) Recover(public *share.PubPoly, msg []byte, sigs [][]byte, t, n uint32) ([]byte, error) {
-	var pubShares []*share.PubShare
-	for _, sig := range sigs {
-		sh := SigShare(sig)
-		i, err := sh.Index()
-		if err != nil {
-			continue
-		}
-		idx := uint32(i)
-		if err = s.Verify(public.Eval(idx).V, msg, sh.Value()); err != nil {
-			continue
-		}
-		point := s.sigGroup.Point()
-		if err := point.UnmarshalBinary(sh.Value()); err != nil {
-			continue
-		}
-		pubShares = append(pubShares, &share.PubShare{I: idx, V: point})
-		if uint32(len(pubShares)) >= t {
-			break
-		}
-	}
-	if uint32(len(pubShares)) < t {
-		return nil, errors.New("not enough valid partial signatures")
-	}
-	commit, err := share.RecoverCommit(s.sigGroup, pubShares, t, n)
-	if err != nil {
-		return nil, err
-	}
-	sig, err := commit.MarshalBinary()
-	if err != nil {
-		return nil, err
-	}
-	return sig, nil
+	_ = "STUB: not implemented"
+	return nil, nil
 }

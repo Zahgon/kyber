@@ -4,16 +4,11 @@ package p256
 
 import (
 	"crypto/cipher"
-	"crypto/sha256"
 	"hash"
 	"io"
 	"reflect"
 
-	"go.dedis.ch/fixbuf"
 	"go.dedis.ch/kyber/v4"
-	"go.dedis.ch/kyber/v4/group/internal/marshalling"
-	"go.dedis.ch/kyber/v4/util/random"
-	"go.dedis.ch/kyber/v4/xof/blake2xb"
 )
 
 // Suite128 is the suite for P256 curve
@@ -23,32 +18,33 @@ type Suite128 struct {
 
 // Hash returns the instance associated with the suite
 func (s *Suite128) Hash() hash.Hash {
-	return sha256.New()
+	_ = "STUB: not implemented"
+	return *
+
+	// XOF creates the XOF associated with the suite
+	new(hash.Hash)
 }
 
-// XOF creates the XOF associated with the suite
 func (s *Suite128) XOF(key []byte) kyber.XOF {
-	return blake2xb.New(key)
+	_ = "STUB: not implemented"
+	return *
+
+	// RandomStream returns a cipher.Stream that returns a key stream
+	// from crypto/rand.
+	new(kyber.XOF)
 }
 
-// RandomStream returns a cipher.Stream that returns a key stream
-// from crypto/rand.
 func (s *Suite128) RandomStream() cipher.Stream {
-	return random.New()
+	_ = "STUB: not implemented"
+	return *new(cipher.Stream)
 }
 
-func (s *Suite128) Read(r io.Reader, objs ...any) error {
-	return fixbuf.Read(r, s, objs...)
-}
+func (s *Suite128) Read(r io.Reader, objs ...any) error { _ = "STUB: not implemented"; return nil }
 
-func (s *Suite128) Write(w io.Writer, objs ...any) error {
-	return fixbuf.Write(w, objs...)
-}
+func (s *Suite128) Write(w io.Writer, objs ...any) error { _ = "STUB: not implemented"; return nil }
 
 // New implements the kyber.encoding interface
-func (s *Suite128) New(t reflect.Type) any {
-	return marshalling.GroupNew(s, t)
-}
+func (s *Suite128) New(t reflect.Type) any { _ = "STUB: not implemented"; return *new(any) }
 
 // NewBlakeSHA256P256 returns a cipher suite based on package
 // go.dedis.ch/kyber/v4/xof/blake2xb, SHA-256, and the NIST P-256
@@ -57,8 +53,4 @@ func (s *Suite128) New(t reflect.Type) any {
 // The scalars created by this group implement kyber.Scalar's SetBytes
 // method, interpreting the bytes as a big-endian integer, so as to be
 // compatible with the Go standard library's big.Int type.
-func NewBlakeSHA256P256() *Suite128 {
-	suite := new(Suite128)
-	suite.Init()
-	return suite
-}
+func NewBlakeSHA256P256() *Suite128 { _ = "STUB: not implemented"; return nil }

@@ -9,7 +9,6 @@ package dleq
 
 import (
 	"errors"
-	"fmt"
 
 	"go.dedis.ch/kyber/v4"
 )
@@ -44,46 +43,16 @@ func NewDLEQProof(
 	H kyber.Point,
 	x kyber.Scalar,
 ) (proof *Proof, xG kyber.Point, xH kyber.Point, err error) {
+	_ = "STUB: not implemented"
 	// Encrypt base points with secret
-	xG = suite.Point().Mul(x, G)
-	xH = suite.Point().Mul(x, H)
-
-	// Commitment
-	v := suite.Scalar().Pick(suite.RandomStream())
-	vG := suite.Point().Mul(v, G)
-	vH := suite.Point().Mul(v, H)
-
-	// Challenge
-	hSuite := suite.Hash()
-	_, err = xG.MarshalTo(hSuite)
-	if err != nil {
-		return nil, nil, nil, err
-	}
-
-	_, err = xH.MarshalTo(hSuite)
-	if err != nil {
-		return nil, nil, nil, err
-	}
-
-	_, err = vG.MarshalTo(hSuite)
-	if err != nil {
-		return nil, nil, nil, err
-	}
-
-	_, err = vH.MarshalTo(hSuite)
-	if err != nil {
-		return nil, nil, nil, err
-	}
-
-	cb := hSuite.Sum(nil)
-	c := suite.Scalar().Pick(suite.XOF(cb))
-
-	// Response
-	r := suite.Scalar()
-	r.Mul(x, c).Sub(v, r)
-
-	return &Proof{c, r, vG, vH}, xG, xH, nil
+	return nil, *new(kyber.Point), *new(kyber.Point), nil
 }
+
+// Commitment
+
+// Challenge
+
+// Response
 
 // NewDLEQProofBatch computes lists of NIZK dlog-equality proofs and of
 // encrypted base points xG and xH. Note that the challenge is computed over all
@@ -94,64 +63,17 @@ func NewDLEQProofBatch(
 	H []kyber.Point,
 	secrets []kyber.Scalar,
 ) (proof []*Proof, xG []kyber.Point, xH []kyber.Point, err error) {
-	if len(G) != len(H) || len(H) != len(secrets) {
-		return nil, nil, nil, fmt.Errorf("invalid: %w", ErrDifferentLengths)
-	}
-
-	n := len(secrets)
-	proofs := make([]*Proof, n)
-	v := make([]kyber.Scalar, n)
-	xG = make([]kyber.Point, n)
-	xH = make([]kyber.Point, n)
-	vG := make([]kyber.Point, n)
-	vH := make([]kyber.Point, n)
-
-	for i, x := range secrets {
-		// Encrypt base points with secrets
-		xG[i] = suite.Point().Mul(x, G[i])
-		xH[i] = suite.Point().Mul(x, H[i])
-
-		// Commitments
-		v[i] = suite.Scalar().Pick(suite.RandomStream())
-		vG[i] = suite.Point().Mul(v[i], G[i])
-		vH[i] = suite.Point().Mul(v[i], H[i])
-	}
-
-	// Collective challenge
-	hSuite := suite.Hash()
-	for _, x := range xG {
-		if _, err := x.MarshalTo(hSuite); err != nil {
-			return nil, nil, nil, err
-		}
-	}
-	for _, x := range xH {
-		if _, err := x.MarshalTo(hSuite); err != nil {
-			return nil, nil, nil, err
-		}
-	}
-	for _, x := range vG {
-		if _, err := x.MarshalTo(hSuite); err != nil {
-			return nil, nil, nil, err
-		}
-	}
-	for _, x := range vH {
-		if _, err := x.MarshalTo(hSuite); err != nil {
-			return nil, nil, nil, err
-		}
-	}
-	cb := hSuite.Sum(nil)
-
-	c := suite.Scalar().Pick(suite.XOF(cb))
-
-	// Responses
-	for i, x := range secrets {
-		r := suite.Scalar()
-		r.Mul(x, c).Sub(v[i], r)
-		proofs[i] = &Proof{c, r, vG[i], vH[i]}
-	}
-
-	return proofs, xG, xH, nil
+	_ = "STUB: not implemented"
+	return nil, nil, nil, nil
 }
+
+// Encrypt base points with secrets
+
+// Commitments
+
+// Collective challenge
+
+// Responses
 
 // Verify examines the validity of the NIZK dlog-equality proof.
 // The proof is valid if the following two conditions hold:
@@ -159,14 +81,6 @@ func NewDLEQProofBatch(
 //	vG == rG + c(xG)
 //	vH == rH + c(xH)
 func (p *Proof) Verify(suite Suite, G kyber.Point, H kyber.Point, xG kyber.Point, xH kyber.Point) error {
-	rG := suite.Point().Mul(p.R, G)
-	rH := suite.Point().Mul(p.R, H)
-	cxG := suite.Point().Mul(p.C, xG)
-	cxH := suite.Point().Mul(p.C, xH)
-	a := suite.Point().Add(rG, cxG)
-	b := suite.Point().Add(rH, cxH)
-	if !p.VG.Equal(a) || !p.VH.Equal(b) {
-		return fmt.Errorf("invalid. %w", ErrInvalidProof)
-	}
+	_ = "STUB: not implemented"
 	return nil
 }

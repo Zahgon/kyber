@@ -6,16 +6,8 @@
 
 package bigmod
 
-import "unsafe"
+func addMulVVW1024(z, x *uint, y uint) (c uint) { _ = "STUB: not implemented"; return 0 }
 
-func addMulVVW1024(z, x *uint, y uint) (c uint) {
-	return addMulVVW(unsafe.Slice(z, 1024/_W), unsafe.Slice(x, 1024/_W), y)
-}
+func addMulVVW1536(z, x *uint, y uint) (c uint) { _ = "STUB: not implemented"; return 0 }
 
-func addMulVVW1536(z, x *uint, y uint) (c uint) {
-	return addMulVVW(unsafe.Slice(z, 1536/_W), unsafe.Slice(x, 1536/_W), y)
-}
-
-func addMulVVW2048(z, x *uint, y uint) (c uint) {
-	return addMulVVW(unsafe.Slice(z, 2048/_W), unsafe.Slice(x, 2048/_W), y)
-}
+func addMulVVW2048(z, x *uint, y uint) (c uint) { _ = "STUB: not implemented"; return 0 }

@@ -6,9 +6,6 @@
 package proof
 
 import (
-	"errors"
-	"strings"
-
 	"go.dedis.ch/kyber/v4"
 )
 
@@ -158,178 +155,93 @@ type repPred struct {
 // A Rep statement of the form Rep(P,x1,B1,...,xn,Bn)
 // indicates that the prover knows secrets x1,...,xn
 // such that point P is the sum x1*B1+...+xn*Bn.
-func Rep(P string, SB ...string) Predicate {
-	if len(SB)&1 != 0 {
-		panic("mismatched Scalar")
-	}
-	t := make([]term, len(SB)/2)
-	for i := range t {
-		t[i].S = SB[i*2]
-		t[i].B = SB[i*2+1]
-	}
-	return &repPred{P, t}
-}
+func Rep(P string, SB ...string) Predicate { _ = "STUB: not implemented"; return *new(Predicate) }
 
 // Return a string representation of this proof-of-representation predicate,
 // mainly for debugging.
-func (rp *repPred) String() string {
-	return rp.precString(precNone)
-}
+func (rp *repPred) String() string { _ = "STUB: not implemented"; return "" }
 
-func (rp *repPred) precString(_ int) string {
-	var b strings.Builder
-	b.WriteString(rp.P)
-	b.WriteString("=")
-	for i := range rp.T {
-		if i > 0 {
-			b.WriteString("+")
-		}
-		t := &rp.T[i]
-		b.WriteString(t.S)
-		b.WriteString("*")
-		b.WriteString(t.B)
-	}
-	return b.String()
-}
+func (rp *repPred) precString(_ int) string { _ = "STUB: not implemented"; return "" }
 
-func (rp *repPred) enumVars(prf *proof) {
-	prf.enumPointVar(rp.P)
-	for i := range rp.T {
-		prf.enumScalarVar(rp.T[i].S)
-		prf.enumPointVar(rp.T[i].B)
-	}
-}
+func (rp *repPred) enumVars(prf *proof) { _ = "STUB: not implemented"; return }
 
 func (rp *repPred) commit(prf *proof, w kyber.Scalar, pv []kyber.Scalar) error {
+	_ = "STUB: not implemented"
 
 	// Create per-predicate prover state
-	v := prf.makeScalars(pv)
-	pp := &proverPred{w, v, nil}
-	prf.pp[rp] = pp
-
-	// Compute commit V=wY+v1G1+...+vkGk
-	V := prf.s.Point()
-	if w != nil { // We're on a non-obligated branch
-		V.Mul(w, prf.pval[rp.P])
-	} else { // We're on a proof-obligated branch, so w=0
-		V.Null()
-	}
-	P := prf.s.Point()
-	for i := range len(rp.T) {
-		t := rp.T[i] // current term
-		s := prf.sidx[t.S]
-
-		// Choose a blinding secret the first time
-		// we encounter each variable
-		if v[s] == nil {
-			v[s] = prf.s.Scalar()
-			err := prf.pc.PriRand(v[s])
-			if err != nil {
-				return err
-			}
-		}
-		P.Mul(v[s], prf.pval[t.B])
-		V.Add(V, P)
-	}
-
-	// Encode and send the commitment to the verifier
-	return prf.pc.Put(V)
+	return nil
 }
+
+// Compute commit V=wY+v1G1+...+vkGk
+
+// We're on a non-obligated branch
+
+// We're on a proof-obligated branch, so w=0
+
+// current term
+
+// Choose a blinding secret the first time
+// we encounter each variable
+
+// Encode and send the commitment to the verifier
 
 func (rp *repPred) respond(prf *proof, c kyber.Scalar,
 	pr []kyber.Scalar) error {
-	pp := prf.pp[rp]
+	_ = "STUB: not implemented"
 
 	// Create a response array for this OR-domain if not done already
-	r := prf.makeScalars(pr)
-
-	for i := range rp.T {
-		t := rp.T[i] // current term
-		s := prf.sidx[t.S]
-
-		// Produce a correct response for each variable
-		// the first time we encounter that variable.
-		if r[s] == nil {
-			if pp.w != nil {
-				// We're on a non-proof-obligated branch:
-				// w was our challenge, v[s] is our response.
-				r[s] = pp.v[s]
-				continue
-			}
-
-			// We're on a proof-obligated branch,
-			// so we need to calculate the correct response
-			// as r = v-cx where x is the secret variable
-			ri := prf.s.Scalar()
-			ri.Mul(c, prf.sval[t.S])
-			ri.Sub(pp.v[s], ri)
-			r[s] = ri
-		}
-	}
-
-	// Send our responses if we created the array (i.e., if pr == nil)
-	return prf.sendResponses(pr, r)
+	return nil
 }
+
+// current term
+
+// Produce a correct response for each variable
+// the first time we encounter that variable.
+
+// We're on a non-proof-obligated branch:
+// w was our challenge, v[s] is our response.
+
+// We're on a proof-obligated branch,
+// so we need to calculate the correct response
+// as r = v-cx where x is the secret variable
+
+// Send our responses if we created the array (i.e., if pr == nil)
 
 func (rp *repPred) getCommits(prf *proof, pr []kyber.Scalar) error {
+	_ = "STUB: not implemented"
 
 	// Create per-predicate verifier state
-	V := prf.s.Point()
-	r := prf.makeScalars(pr)
-	vp := &verifierPred{V, r}
-	prf.vp[rp] = vp
-
-	// Get the commitment for this representation
-	if e := prf.vc.Get(vp.V); e != nil {
-		return e
-	}
-
-	// Fill in the r vector with the responses we'll need.
-	for i := range rp.T {
-		t := rp.T[i] // current term
-		s := prf.sidx[t.S]
-		if r[s] == nil {
-			r[s] = prf.s.Scalar()
-		}
-	}
 	return nil
 }
+
+// Get the commitment for this representation
+
+// Fill in the r vector with the responses we'll need.
+
+// current term
 
 func (rp *repPred) verify(prf *proof, c kyber.Scalar, pr []kyber.Scalar) error {
-	vp := prf.vp[rp]
-	r := vp.r
+	_ = "STUB: not implemented"
+	return nil
 
 	// Get the needed responses if a parent didn't already
-	if e := prf.getResponses(pr, r); e != nil {
-		return e
-	}
-
-	// Recompute commit V=cY+r1G1+...+rkGk
-	V := prf.s.Point()
-	V.Mul(c, prf.pval[rp.P])
-	P := prf.s.Point()
-	for i := range len(rp.T) {
-		t := rp.T[i] // current term
-		s := prf.sidx[t.S]
-		P.Mul(r[s], prf.pval[t.B])
-		V.Add(V, P)
-	}
-	if !V.Equal(vp.V) {
-		return errors.New("invalid proof: commit mismatch")
-	}
-
-	return nil
 }
+
+// Recompute commit V=cY+r1G1+...+rkGk
+
+// current term
 
 func (rp *repPred) Prover(suite Suite, secrets map[string]kyber.Scalar,
 	points map[string]kyber.Point,
 	choice map[Predicate]int) Prover {
-	return proof{}.init(suite, rp).prover(rp, secrets, points, choice)
+	_ = "STUB: not implemented"
+	return *new(Prover)
 }
 
 func (rp *repPred) Verifier(suite Suite,
 	points map[string]kyber.Point) Verifier {
-	return proof{}.init(suite, rp).verifier(rp, points)
+	_ = "STUB: not implemented"
+	return *new(Verifier)
 }
 
 ////////// And predicate //////////
@@ -338,105 +250,54 @@ type andPred []Predicate
 
 // And predicate states that all of the constituent sub-predicates are true.
 // And predicates may contain Rep predicates and/or other And predicates.
-func And(sub ...Predicate) Predicate {
-	and := andPred(sub)
-	return &and
-}
+func And(sub ...Predicate) Predicate { _ = "STUB: not implemented"; return *new(Predicate) }
 
 // Return a string representation of this AND predicate, mainly for debugging.
-func (ap *andPred) String() string {
-	return ap.precString(precNone)
-}
+func (ap *andPred) String() string { _ = "STUB: not implemented"; return "" }
 
-func (ap *andPred) precString(prec int) string {
-	sub := []Predicate(*ap)
-	s := sub[0].precString(precAnd)
-	for i := 1; i < len(sub); i++ {
-		s = s + " && " + sub[i].precString(precAnd)
-	}
-	if prec != precNone && prec != precAnd {
-		s = "(" + s + ")"
-	}
-	return s
-}
+func (ap *andPred) precString(prec int) string { _ = "STUB: not implemented"; return "" }
 
-func (ap *andPred) enumVars(prf *proof) {
-	sub := []Predicate(*ap)
-	for i := range sub {
-		sub[i].enumVars(prf)
-	}
-}
+func (ap *andPred) enumVars(prf *proof) { _ = "STUB: not implemented"; return }
 
 func (ap *andPred) commit(prf *proof, w kyber.Scalar, pv []kyber.Scalar) error {
-	sub := []Predicate(*ap)
+	_ = "STUB: not implemented"
+	return nil
 
 	// Create per-predicate prover state
-	v := prf.makeScalars(pv)
-
-	// Recursively generate commitments
-	for i := range sub {
-		if e := sub[i].commit(prf, w, v); e != nil {
-			return e
-		}
-	}
-
-	return nil
 }
 
+// Recursively generate commitments
+
 func (ap *andPred) respond(prf *proof, c kyber.Scalar, pr []kyber.Scalar) error {
-	sub := []Predicate(*ap)
+	_ = "STUB: not implemented"
+	return nil
 
 	// Recursively compute responses in all sub-predicates
-	r := prf.makeScalars(pr)
-	for i := range sub {
-		if e := sub[i].respond(prf, c, r); e != nil {
-			return e
-		}
-	}
-	return prf.sendResponses(pr, r)
 }
 
 func (ap *andPred) getCommits(prf *proof, pr []kyber.Scalar) error {
-	sub := []Predicate(*ap)
+	_ = "STUB: not implemented"
+	return nil
 
 	// Create per-predicate verifier state
-	r := prf.makeScalars(pr)
-	vp := &verifierPred{nil, r}
-	prf.vp[ap] = vp
-
-	for i := range sub {
-		if e := sub[i].getCommits(prf, r); e != nil {
-			return e
-		}
-	}
-	return nil
 }
 
 func (ap *andPred) verify(prf *proof, c kyber.Scalar, pr []kyber.Scalar) error {
-	sub := []Predicate(*ap)
-	vp := prf.vp[ap]
-	r := vp.r
-
-	if e := prf.getResponses(pr, r); e != nil {
-		return e
-	}
-	for i := range sub {
-		if e := sub[i].verify(prf, c, r); e != nil {
-			return e
-		}
-	}
+	_ = "STUB: not implemented"
 	return nil
 }
 
 func (ap *andPred) Prover(suite Suite, secrets map[string]kyber.Scalar,
 	points map[string]kyber.Point,
 	choice map[Predicate]int) Prover {
-	return proof{}.init(suite, ap).prover(ap, secrets, points, choice)
+	_ = "STUB: not implemented"
+	return *new(Prover)
 }
 
 func (ap *andPred) Verifier(suite Suite,
 	points map[string]kyber.Point) Verifier {
-	return proof{}.init(suite, ap).verifier(ap, points)
+	_ = "STUB: not implemented"
+	return *new(Verifier)
 }
 
 ////////// Or predicate //////////
@@ -446,192 +307,87 @@ type orPred []Predicate
 // Or predicate states that the prover knows
 // at least one of the sub-predicates to be true,
 // but the proof does not reveal any information about which.
-func Or(sub ...Predicate) Predicate {
-	or := orPred(sub)
-	return &or
-}
+func Or(sub ...Predicate) Predicate { _ = "STUB: not implemented"; return *new(Predicate) }
 
 // Return a string representation of this OR predicate, mainly for debugging.
-func (op *orPred) String() string {
-	return op.precString(precNone)
-}
+func (op *orPred) String() string { _ = "STUB: not implemented"; return "" }
 
-func (op *orPred) precString(prec int) string {
-	sub := []Predicate(*op)
-	s := sub[0].precString(precOr)
-	for i := 1; i < len(sub); i++ {
-		s = s + " || " + sub[i].precString(precOr)
-	}
-	if prec != precNone && prec != precOr {
-		s = "(" + s + ")"
-	}
-	return s
-}
+func (op *orPred) precString(prec int) string { _ = "STUB: not implemented"; return "" }
 
-func (op *orPred) enumVars(prf *proof) {
-	sub := []Predicate(*op)
-	for i := range sub {
-		sub[i].enumVars(prf)
-	}
-}
+func (op *orPred) enumVars(prf *proof) { _ = "STUB: not implemented"; return }
 
 func (op *orPred) commit(prf *proof, w kyber.Scalar, pv []kyber.Scalar) error {
-	sub := []Predicate(*op)
-	if pv != nil { // only happens within an AND expression
-		return errors.New("can't have OR predicates within AND predicates")
-	}
-
-	// Create per-predicate prover state
-	wi := make([]kyber.Scalar, len(sub))
-	pp := &proverPred{w, nil, wi}
-	prf.pp[op] = pp
-
-	// Choose pre-challenges for our subs.
-	switch w {
-	case nil:
-		// We're on a proof-obligated branch;
-		// choose random pre-challenges for only non-obligated subs.
-		choice, ok := prf.choice[op]
-		if !ok || choice < 0 || choice >= len(sub) {
-			return errors.New("no choice of proof branch for OR-predicate " +
-				op.String())
-		}
-		for i := range sub {
-			if i != choice {
-				wi[i] = prf.s.Scalar()
-				err := prf.pc.PriRand(wi[i])
-				if err != nil {
-					return err
-				}
-			} // else wi[i] == nil for proof-obligated sub
-		}
-	default:
-		// Since w != nil, we're in a non-obligated branch,
-		// so choose random pre-challenges for all subs
-		// such that they add up to the master pre-challenge w.
-		last := len(sub) - 1 // index of last sub
-		wl := prf.s.Scalar().Set(w)
-		for i := range last { // choose all but last
-			wi[i] = prf.s.Scalar()
-			err := prf.pc.PriRand(wi[i])
-			if err != nil {
-				return err
-			}
-			wl.Sub(wl, wi[i])
-		}
-
-		wi[last] = wl
-	}
-
-	return commitmentProducer(prf, wi, sub)
+	_ = "STUB: not implemented"
+	return nil
 }
+
+// only happens within an AND expression
+
+// Create per-predicate prover state
+
+// Choose pre-challenges for our subs.
+
+// We're on a proof-obligated branch;
+// choose random pre-challenges for only non-obligated subs.
+
+// else wi[i] == nil for proof-obligated sub
+
+// Since w != nil, we're in a non-obligated branch,
+// so choose random pre-challenges for all subs
+// such that they add up to the master pre-challenge w.
+// index of last sub
+
+// choose all but last
 
 func commitmentProducer(prf *proof, wi []kyber.Scalar, sub []Predicate) error {
+	_ = "STUB: not implemented"
 	// Now recursively choose commitments within each sub
-	for i := range sub {
-		// Fresh variable-blinding secrets for each pre-commitment
-		if err := sub[i].commit(prf, wi[i], nil); err != nil {
-			return err
-		}
-	}
-
 	return nil
 }
+
+// Fresh variable-blinding secrets for each pre-commitment
 
 func (op *orPred) respond(prf *proof, c kyber.Scalar, pr []kyber.Scalar) error {
-	sub := []Predicate(*op)
-	pp := prf.pp[op]
-	if pr != nil {
-		return errors.New("OR predicates can't be nested in anything else")
-	}
-
-	ci := pp.wi
-	if pp.w == nil {
-		// Calculate the challenge for the proof-obligated subtree
-		cs := prf.s.Scalar().Set(c)
-		choice := prf.choice[op]
-		for i := range sub {
-			if i != choice {
-				cs.Sub(cs, ci[i])
-			}
-		}
-		ci[choice] = cs
-	}
-
-	// If there's more than one choice, send all our sub-challenges.
-	if len(sub) > 1 {
-		if e := prf.pc.Put(ci); e != nil {
-			return e
-		}
-	}
-
-	// Recursively compute responses in all subtrees
-	for i := range sub {
-		if e := sub[i].respond(prf, ci[i], nil); e != nil {
-			return e
-		}
-	}
-
+	_ = "STUB: not implemented"
 	return nil
 }
+
+// Calculate the challenge for the proof-obligated subtree
+
+// If there's more than one choice, send all our sub-challenges.
+
+// Recursively compute responses in all subtrees
 
 // Get from the verifier all the commitments needed for this predicate
 func (op *orPred) getCommits(prf *proof, _ []kyber.Scalar) error {
-	sub := []Predicate(*op)
-	for i := range sub {
-		if e := sub[i].getCommits(prf, nil); e != nil {
-			return e
-		}
-	}
+	_ = "STUB: not implemented"
 	return nil
 }
 
 func (op *orPred) verify(prf *proof, c kyber.Scalar, pr []kyber.Scalar) error {
-	sub := []Predicate(*op)
-	if pr != nil {
-		return errors.New("OR predicates can't be in anything else")
-	}
-
-	// Get the prover's sub-challenges
-	nsub := len(sub)
-	ci := make([]kyber.Scalar, nsub)
-	if nsub > 1 {
-		if e := prf.vc.Get(ci); e != nil {
-			return e
-		}
-
-		// Make sure they add up to the parent's composite challenge
-		csum := prf.s.Scalar().Zero()
-		for i := range nsub {
-			csum.Add(csum, ci[i])
-		}
-		if !csum.Equal(c) {
-			return errors.New("invalid proof: bad sub-challenges")
-		}
-
-	} else { // trivial single-sub OR
-		ci[0] = c
-	}
-
-	// Recursively verify all subs
-	for i := range sub {
-		if e := sub[i].verify(prf, ci[i], nil); e != nil {
-			return e
-		}
-	}
-
+	_ = "STUB: not implemented"
 	return nil
 }
+
+// Get the prover's sub-challenges
+
+// Make sure they add up to the parent's composite challenge
+
+// trivial single-sub OR
+
+// Recursively verify all subs
 
 func (op *orPred) Prover(suite Suite, secrets map[string]kyber.Scalar,
 	points map[string]kyber.Point,
 	choice map[Predicate]int) Prover {
-	return proof{}.init(suite, op).prover(op, secrets, points, choice)
+	_ = "STUB: not implemented"
+	return *new(Prover)
 }
 
 func (op *orPred) Verifier(suite Suite,
 	points map[string]kyber.Point) Verifier {
-	return proof{}.init(suite, op).verifier(op, points)
+	_ = "STUB: not implemented"
+	return *new(Verifier)
 }
 
 /*
@@ -665,119 +421,68 @@ func (prf proof) init(suite Suite, pred Predicate) *proof {
 	return &prf
 }
 
-func (prf *proof) enumScalarVar(name string) {
-	if prf.sidx[name] == 0 {
-		prf.sidx[name] = len(prf.svar)
-		prf.svar = append(prf.svar, name)
-	}
-}
+func (prf *proof) enumScalarVar(name string) { _ = "STUB: not implemented"; return }
 
-func (prf *proof) enumPointVar(name string) {
-	if prf.pidx[name] == 0 {
-		prf.pidx[name] = len(prf.pvar)
-		prf.pvar = append(prf.pvar, name)
-	}
-}
+func (prf *proof) enumPointVar(name string) { _ = "STUB: not implemented"; return }
 
 // Make a response-array if that wasn't already done in a parent predicate.
 func (prf *proof) makeScalars(pr []kyber.Scalar) []kyber.Scalar {
-	if pr == nil {
-		return make([]kyber.Scalar, prf.nsvars)
-	}
-	return pr
+	_ = "STUB: not implemented"
+	return nil
 }
 
 // Transmit our response-array if a corresponding makeScalars() created it.
 func (prf *proof) sendResponses(pr []kyber.Scalar, r []kyber.Scalar) error {
-	if pr == nil {
-		for i := range r {
-			// Send responses only for variables
-			// that were used in this OR-domain.
-			if r[i] != nil {
-				if e := prf.pc.Put(r[i]); e != nil {
-					return e
-				}
-			}
-		}
-	}
+	_ = "STUB: not implemented"
 	return nil
 }
+
+// Send responses only for variables
+// that were used in this OR-domain.
 
 // In the verifier, get the responses at the top of an OR-domain,
 // if a corresponding makeScalars() call created it.
 func (prf *proof) getResponses(pr []kyber.Scalar, r []kyber.Scalar) error {
-	if pr == nil {
-		for i := range r {
-			if r[i] != nil {
-				if e := prf.vc.Get(r[i]); e != nil {
-					return e
-				}
-			}
-		}
-	}
+	_ = "STUB: not implemented"
 	return nil
 }
 
 func (prf *proof) prove(p Predicate, sval map[string]kyber.Scalar,
 	pval map[string]kyber.Point,
 	choice map[Predicate]int, pc ProverContext) error {
-	prf.pc = pc
-	prf.sval = sval
-	prf.pval = pval
-	prf.choice = choice
-	prf.pp = make(map[Predicate]*proverPred)
-
-	// Generate all commitments
-	if e := p.commit(prf, nil, nil); e != nil {
-		return e
-	}
-
-	// Generate top-level challenge from public randomness
-	c := prf.s.Scalar()
-	if e := pc.PubRand(c); e != nil {
-		return e
-	}
-
-	// Generate all responses based on master challenge
-	return p.respond(prf, c, nil)
+	_ = "STUB: not implemented"
+	return nil
 }
+
+// Generate all commitments
+
+// Generate top-level challenge from public randomness
+
+// Generate all responses based on master challenge
 
 func (prf *proof) verify(p Predicate, pval map[string]kyber.Point,
 	vc VerifierContext) error {
-	prf.vc = vc
-	prf.pval = pval
-	prf.vp = make(map[Predicate]*verifierPred)
-
-	// Get the commitments from the verifier,
-	// and calculate the sets of responses we'll need for each OR-domain.
-	if e := p.getCommits(prf, nil); e != nil {
-		return e
-	}
-
-	// Produce the top-level challenge
-	c := prf.s.Scalar()
-	if e := vc.PubRand(c); e != nil {
-		return e
-	}
-
-	// Check all the responses and sub-challenges against the commitments.
-	return p.verify(prf, c, nil)
+	_ = "STUB: not implemented"
+	return nil
 }
+
+// Get the commitments from the verifier,
+// and calculate the sets of responses we'll need for each OR-domain.
+
+// Produce the top-level challenge
+
+// Check all the responses and sub-challenges against the commitments.
 
 // Produce a higher-order Prover embodying a given proof predicate.
 func (prf *proof) prover(p Predicate, sval map[string]kyber.Scalar,
 	pval map[string]kyber.Point,
 	choice map[Predicate]int) Prover {
-
-	return func(ctx ProverContext) error {
-		return prf.prove(p, sval, pval, choice, ctx)
-	}
+	_ = "STUB: not implemented"
+	return *new(Prover)
 }
 
 // Produce a higher-order Verifier embodying a given proof predicate.
 func (prf *proof) verifier(p Predicate, pval map[string]kyber.Point) Verifier {
-
-	return func(ctx VerifierContext) error {
-		return prf.verify(p, pval, ctx)
-	}
+	_ = "STUB: not implemented"
+	return *new(Verifier)
 }
